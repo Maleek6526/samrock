@@ -16,11 +16,8 @@ const navLinks = [
 ];
 
 const iconButton =
-  'p-2.5 rounded-xl bg-surface-3 border border-hairline text-strong hover:border-brand hover:text-brand transition';
-const primaryButton =
-  'inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-solid to-brand-strong text-brand-contrast font-semibold shadow-lg shadow-brand/20 hover:opacity-95 transition';
-const secondaryButton =
-  'inline-flex items-center justify-center rounded-xl bg-surface-3 border border-hairline text-strong hover:border-brand hover:text-brand font-semibold transition';
+  'rounded-xs border border-hairline p-2.5 text-strong transition hover:border-brand hover:text-brand';
+const compactGhost = 'btn btn-ghost px-4 py-2.5';
 
 export default function Navbar() {
   const settings = useSiteSettings();
@@ -33,11 +30,11 @@ export default function Navbar() {
   }, [theme]);
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-40 border-b border-hairline bg-surface/90 backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-24 items-center justify-between">
+    <nav className="fixed inset-x-0 top-0 z-40 border-b border-hairline bg-surface/85 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-6 sm:px-8">
+        <div className="flex h-20 items-center justify-between sm:h-24">
           <Link href="/" className="group flex items-center gap-3">
-            <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-hairline shadow-sm transition group-hover:border-brand sm:h-12 sm:w-12">
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xs border border-hairline transition group-hover:border-brand sm:h-12 sm:w-12">
               <Image
                 src="/logo.jpg"
                 alt=""
@@ -48,21 +45,19 @@ export default function Navbar() {
               />
             </div>
             <span className="flex flex-col">
-              <span className="text-lg font-extrabold tracking-wider text-strong transition group-hover:text-brand sm:text-xl">
+              <span className="font-display text-xl leading-none tracking-tight text-strong transition group-hover:text-brand sm:text-2xl">
                 {brandMark(settings.producerName)}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-silver sm:text-[11px]">
-                Music Productions
-              </span>
+              <span className="eyebrow mt-1.5 text-silver">Music Productions</span>
             </span>
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-9 md:flex">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className="text-sm font-medium text-silver transition hover:text-brand"
+                className="eyebrow link-underline text-silver transition hover:text-strong"
               >
                 {link.name}
               </a>
@@ -81,15 +76,12 @@ export default function Navbar() {
               {isDarkMode ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
             </button>
 
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-surface-3 px-3.5 py-2 text-xs font-semibold text-strong transition hover:border-brand hover:text-brand"
-            >
+            <Link href="/admin" className={compactGhost}>
               <Shield size={14} aria-hidden="true" />
               Admin
             </Link>
 
-            <a href="#contact" className={`${primaryButton} px-5 py-2.5 text-sm`}>
+            <a href="#contact" className="btn btn-primary px-5 py-3">
               Book Session
             </a>
           </div>
@@ -100,7 +92,7 @@ export default function Navbar() {
               onClick={toggleTheme}
               aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
               aria-pressed={isDarkMode}
-              className="rounded-lg border border-hairline bg-surface-3 p-2 text-strong"
+              className="rounded-xs border border-hairline p-2 text-strong"
             >
               {isDarkMode ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
             </button>
@@ -110,7 +102,7 @@ export default function Navbar() {
               aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={isOpen}
               aria-controls="mobile-nav"
-              className="rounded-lg border border-hairline bg-surface-3 p-2 text-strong"
+              className="rounded-xs border border-hairline p-2 text-strong"
             >
               {isOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
             </button>
@@ -119,33 +111,23 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div
-          id="mobile-nav"
-          className="space-y-3 border-b border-hairline bg-surface px-4 pb-6 pt-2 backdrop-blur-xl md:hidden"
-        >
+        <div id="mobile-nav" className="border-b border-hairline bg-surface px-6 pb-8 pt-2 md:hidden">
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
               onClick={() => setIsOpen(false)}
-              className="block border-b border-hairline py-2 text-base font-medium text-silver transition hover:text-brand"
+              className="eyebrow block border-b border-hairline py-4 text-silver transition hover:text-strong"
             >
               {link.name}
             </a>
           ))}
-          <div className="flex flex-col gap-2 pt-2">
-            <Link
-              href="/admin"
-              onClick={() => setIsOpen(false)}
-              className={`${secondaryButton} w-full py-2.5 text-sm`}
-            >
+          <div className="flex flex-col gap-3 pt-6">
+            <Link href="/admin" onClick={() => setIsOpen(false)} className={`${compactGhost} w-full`}>
+              <Shield size={14} aria-hidden="true" />
               Admin Dashboard
             </Link>
-            <a
-              href="#contact"
-              onClick={() => setIsOpen(false)}
-              className={`${primaryButton} w-full py-2.5 text-sm`}
-            >
+            <a href="#contact" onClick={() => setIsOpen(false)} className="btn btn-primary w-full">
               Book Session
             </a>
           </div>

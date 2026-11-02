@@ -65,11 +65,11 @@ export default function Footer() {
   const copyrightYear = useCopyrightYear();
 
   return (
-    <footer className="border-t border-hairline bg-surface-3 px-4 py-16 text-silver">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 md:grid-cols-4">
-        <div className="space-y-4 md:col-span-2">
-          <div className="flex items-center gap-4">
-            <div className="h-14 w-14 overflow-hidden rounded-xl border border-hairline bg-surface-2 shadow-md sm:h-16 sm:w-16">
+    <footer className="border-t border-hairline bg-surface-3 px-6 py-16 text-silver sm:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 md:grid-cols-4">
+        <div className="space-y-6 md:col-span-2">
+          <Link href="/" className="group flex items-center gap-4">
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xs border border-hairline sm:h-16 sm:w-16">
               <Image
                 src="/logo.jpg"
                 alt=""
@@ -78,21 +78,20 @@ export default function Footer() {
                 className="h-full w-full scale-110 object-cover"
               />
             </div>
-            <span className="group flex flex-col">
-              <span className="text-xl font-extrabold tracking-wider text-strong transition group-hover:text-brand">
+            <span className="flex flex-col">
+              <span className="font-display text-2xl leading-none tracking-tight text-strong transition group-hover:text-brand">
                 {brandMark(settings.producerName)}
               </span>
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand">
-                Music Productions
-              </span>
+              <span className="eyebrow mt-2 text-brand">Music Productions</span>
             </span>
-          </div>
-          <p className="max-w-sm text-sm text-silver">
-            Professional beat making, recording, mixing, mastering, and audio engineering. Delivering
+          </Link>
+
+          <p className="max-w-sm text-sm leading-relaxed text-silver">
+            Professional beat making, recording, mixing, mastering and audio engineering. Delivering
             radio-ready records for the global music industry.
           </p>
 
-          <ul className="flex flex-wrap gap-3 pt-4">
+          <ul className="flex flex-wrap gap-2.5 pt-2">
             {socialLinks.map((social) => (
               <li key={social.label}>
                 <a
@@ -101,7 +100,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   aria-label={social.label}
                   title={social.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-surface-2 text-silver shadow-sm transition hover:border-brand hover:bg-brand-solid hover:text-brand-contrast"
+                  className="flex h-10 w-10 items-center justify-center rounded-xs border border-hairline text-silver transition hover:border-brand hover:text-brand"
                 >
                   {socialIcons[social.label]}
                 </a>
@@ -110,12 +109,12 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-strong">Navigation</h2>
-          <ul className="space-y-2 text-sm">
+        <div className="space-y-5">
+          <h2 className="eyebrow text-strong">Navigation</h2>
+          <ul className="space-y-3 text-sm">
             {footerLinks.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="transition hover:text-brand">
+                <a href={link.href} className="link-underline text-silver transition hover:text-strong">
                   {link.label}
                 </a>
               </li>
@@ -123,32 +122,35 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-strong">Management</h2>
-          <ul className="space-y-2 text-sm">
+        <div className="space-y-5">
+          <h2 className="eyebrow text-strong">Management</h2>
+          <ul className="space-y-3 text-sm">
             <li>
-              <Link href="/admin" className="inline-flex items-center gap-1.5 text-brand hover:underline">
+              <Link
+                href="/admin"
+                className="inline-flex items-center gap-2 text-brand transition hover:text-strong"
+              >
                 <Shield size={14} aria-hidden="true" /> Admin Dashboard
               </Link>
             </li>
-            <li className="pt-2 text-xs text-silver">
-              Hotline / WhatsApp:
+            <li className="pt-1">
+              <span className="eyebrow block text-silver">Hotline / WhatsApp</span>
               {contactInfo.phones.map((phone) => (
-                <strong key={phone} className="block pt-1 text-strong">
+                <span key={phone} className="mt-2 block font-medium tabular-nums text-strong">
                   {phone}
-                </strong>
+                </span>
               ))}
             </li>
           </ul>
         </div>
       </div>
 
-      <div className="mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-xs text-silver sm:flex-row">
+      <div className="mx-auto mt-14 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-xs text-silver sm:flex-row">
         <p>© {copyrightYear} Samrock Music Productions. All rights reserved.</p>
-        <p className="flex items-center gap-1">
-          Designed &amp; Engineered with
-          <Heart size={12} className="fill-red-500 text-red-500" aria-hidden="true" />
-          for the Culture
+        <p className="flex items-center gap-1.5">
+          Designed &amp; engineered with
+          <Heart size={12} className="fill-brand text-brand" aria-hidden="true" />
+          for the culture
         </p>
       </div>
     </footer>

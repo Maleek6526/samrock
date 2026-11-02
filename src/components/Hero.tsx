@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Play, Calendar } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { ArrowRight } from 'lucide-react';
 import { useSiteSettings } from '@/lib/store';
 
 const genres = [
@@ -15,60 +16,128 @@ const genres = [
   'Jingles',
 ];
 
+const backgroundImages = [
+  '/hero1.jpg',
+  '/hero2.jpg',
+  '/hero3.jpg',
+  '/hero4.jpg',
+  '/hero5.jpg',
+];
+
+const dynamicPhrases = [
+  'hit records',
+  'sonic gold',
+  'studio magic',
+  'platinum vibes',
+  'iconic tracks',
+  'masterful sound',
+];
+
 export default function Hero() {
   const settings = useSiteSettings();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
+      setCurrentPhraseIndex((prev) => (prev + 1) % dynamicPhrases.length);
+    }, 2000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <section className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-surface pb-12 pt-32">
+    <section className="relative flex min-h-screen flex-col overflow-hidden bg-surface pt-28">
+      {/* Background Slideshow */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {backgroundImages.map((src, index) => (
+          <div
+            key={src}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <Image
+              src={src}
+              alt=""
+              fill
+              priority={index === 0}
+              className="object-cover"
+              sizes="100vw"
+            />
+            {/* Stronger overlay for high-fashion readability in both light and dark modes */}
+            <div className="absolute inset-0 bg-surface/70 backdrop-blur-[2px] dark:bg-surface/85" />
+          </div>
+        ))}
+      </div>
+
+      {/* The ambient colour glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/3 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/10 blur-[140px]"
+        className="pointer-events-none absolute -right-40 -top-40 z-10 h-[560px] w-[560px] rounded-full bg-brand/[0.07] blur-[160px]"
       />
 
-      <div className="z-10 mx-auto my-auto max-w-5xl space-y-8 px-4 text-center">
-        <p className="inline-flex items-center gap-2 rounded-full border border-brand/40 bg-surface-2 px-4 py-2 text-xs font-semibold text-brand shadow-lg backdrop-blur-md">
-          <span aria-hidden="true" className="h-2.5 w-2.5 animate-pulse rounded-full bg-green-500" />
-          {settings.statusBadge}
-        </p>
+      <div className="relative z-20 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-6 py-16 sm:px-8">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-8">
+            <p className="eyebrow flex items-center gap-3 leading-relaxed text-brand animate-fade-in-up">
+              <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-brand" />
+              {settings.statusBadge}
+            </p>
 
-        <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-strong sm:text-6xl lg:text-7xl">
-          Crafting <span className="text-gradient">Hit Records</span> &amp; Heavy Soundscapes
-        </h1>
+            <h1 className="mt-8 font-display text-hero text-strong animate-fade-in-up [animation-delay:90ms]">
+              Crafting{' '}
+              <span className="relative inline-flex h-[1.25em] items-center overflow-hidden align-bottom">
+                {dynamicPhrases.map((phrase, index) => (
+                  <em
+                    key={phrase}
+                    className={`absolute inset-x-0 whitespace-nowrap text-brand transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      index === currentPhraseIndex
+                        ? 'translate-y-0 opacity-100'
+                        : index < currentPhraseIndex
+                        ? '-translate-y-full opacity-0'
+                        : 'translate-y-full opacity-0'
+                    }`}
+                  >
+                    {phrase}
+                  </em>
+                ))}
+              </span>
+              {' '}and heavy soundscapes
+            </h1>
+          </div>
 
-        <p className="mx-auto max-w-2xl text-base leading-relaxed text-silver sm:text-lg">
-          Welcome to <strong className="text-strong">{settings.producerName}</strong>. Professional beat
-          making, recording, top-tier mixing &amp; mastering, and custom production tailored for the global
-          music scene.
-        </p>
+          <div className="flex flex-col justify-end lg:col-span-4">
+            <p className="text-lede text-strong animate-fade-in-up [animation-delay:180ms]">
+              <span className="font-bold">{settings.producerName}</span> builds records end to end:
+              beat making, recording, mixing and mastering for artists working across Afrobeats,
+              Reggae, Woro and Trap.
+            </p>
 
-        <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
-          <a
-            href="#beats"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-solid to-brand-strong px-8 py-4 text-base font-bold text-brand-contrast shadow-xl shadow-brand/25 transition hover:scale-105 sm:w-auto"
-          >
-            <Play size={18} fill="currentColor" aria-hidden="true" />
-            Explore Beat Store
-          </a>
-          <a
-            href="#contact"
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand/30 bg-surface-2 px-8 py-4 text-base font-bold text-strong shadow-lg transition hover:border-brand sm:w-auto"
-          >
-            <Calendar size={18} className="text-brand" aria-hidden="true" />
-            Book Studio Session
-          </a>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row animate-fade-in-up [animation-delay:270ms]">
+              <a href="#beats" className="btn btn-primary">
+                Explore the catalog
+                <ArrowRight size={15} aria-hidden="true" />
+              </a>
+              <a href="#contact" className="btn btn-ghost">
+                Book a session
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Two identical copies scroll by exactly 50% of their width, so the loop is seamless. */}
-      <div className="relative mt-16 w-full overflow-hidden border-t border-hairline bg-surface-3 py-4 backdrop-blur-md">
+      {/* Marquee loop */}
+      <div className="relative z-20 mt-16 w-full overflow-hidden border-y border-hairline py-4">
         <div className="flex w-max animate-marquee items-center">
           {[...genres, ...genres].map((genre, index) => (
             <div
               key={`${genre}-${index}`}
               aria-hidden={index >= genres.length}
-              className="flex items-center gap-4 px-6 text-sm font-bold uppercase tracking-widest text-silver"
+              className="eyebrow flex items-center gap-8 px-8 text-silver"
             >
-              <span className="text-brand">•</span>
+              <span className="text-brand">/</span>
               <span>{genre}</span>
             </div>
           ))}

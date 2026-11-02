@@ -8,8 +8,9 @@ module.exports = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
 
-  // Brand colours (brand / surface / hairline / strong / silver) and the
-  // `text-gradient` utility live in globals.css so they can flip per theme.
+  // The brand palette, fluid type scale and component classes (.btn, .card,
+  // .field, .eyebrow, .link-underline) live in globals.css so they can flip
+  // per theme. This file only carries the marquee animation.
   theme: {
     extend: {
       keyframes: {

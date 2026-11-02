@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { contactInfo, defaultSiteSettings, socialLinks } from '@/lib/site';
@@ -7,6 +7,16 @@ import { contactInfo, defaultSiteSettings, socialLinks } from '@/lib/site';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+// Display face for headlines. The italic is used for the accented word, which
+// is why it is loaded even though the site never asks for italic body copy.
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-instrument-serif',
   display: 'swap',
 });
 
@@ -69,7 +79,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light dark',
-  themeColor: '#2e2e2e',
+  themeColor: '#0a0a0b',
 };
 
 const jsonLd = {
@@ -92,21 +102,25 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <head>
         {/* Applies the saved theme before paint to avoid a flash of the wrong colours. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}}catch(e){}`,
           }}
         />
-        {children}
-        <Toaster position="top-center" richColors theme="dark" closeButton />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
           }}
         />
+      </head>
+      <body
+        className={`${inter.variable} ${instrumentSerif.variable} font-sans antialiased`}
+      >
+        {children}
+        <Toaster position="top-center" richColors theme="dark" closeButton />
       </body>
     </html>
   );

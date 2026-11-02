@@ -50,16 +50,13 @@ type TabId = (typeof TABS)[number]['id'];
  */
 type BeatDraft = Omit<Beat, 'bpm' | 'price'> & { bpm: number | ''; price: number | '' };
 
-const panelClass = 'rounded-2xl border border-hairline bg-surface p-6 shadow-xl sm:p-8';
+const panelClass = 'border border-hairline bg-surface p-6 sm:p-8';
 const fieldClass =
-  'w-full rounded-xl border border-hairline bg-surface-2 px-4 py-3 text-sm font-medium text-strong transition placeholder:text-silver focus:border-brand focus:outline-none';
-const labelClass = 'block text-xs font-bold uppercase tracking-wider text-silver';
-const primaryButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-solid px-6 py-3 text-sm font-bold text-brand-contrast shadow-lg shadow-brand/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50';
-const ghostButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-2 px-6 py-3 text-sm font-bold text-strong transition hover:border-brand disabled:opacity-50';
-const dangerButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-6 py-3 text-sm font-bold text-red-600 transition hover:bg-red-500/20 dark:text-red-400';
+  'w-full rounded-xs border border-hairline bg-surface-2 px-3.5 py-3 text-sm text-strong transition placeholder:text-silver focus:border-brand focus:outline-none';
+const labelClass = 'eyebrow block text-silver';
+const primaryButton = 'btn btn-primary';
+const ghostButton = 'btn btn-ghost';
+const dangerButton = 'btn border border-danger/40 text-danger hover:border-danger hover:bg-danger/10';
 
 function numberFromInput(raw: string): number | '' {
   if (raw.trim() === '') return '';
@@ -77,16 +74,12 @@ function toStoredBeats(drafts: BeatDraft[]): Beat[] {
 
 function SaveState({ dirty }: { dirty: boolean }) {
   return (
-    <span
-      className="text-xs font-bold"
-      role="status"
-      aria-live="polite"
-    >
+    <span className="eyebrow" role="status" aria-live="polite">
       {dirty ? (
         <span className="text-brand">Unsaved changes</span>
       ) : (
-        <span className="inline-flex items-center gap-1 text-silver">
-          <CheckCircle size={14} aria-hidden="true" /> Saved
+        <span className="inline-flex items-center gap-1.5 text-silver">
+          <CheckCircle size={13} aria-hidden="true" /> Saved
         </span>
       )}
     </span>
@@ -303,20 +296,20 @@ function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 py-16">
-        <div className="w-full max-w-md space-y-6 rounded-2xl border border-hairline bg-surface p-6 shadow-2xl sm:p-8">
-          <div className="space-y-2 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-brand/40 bg-brand/10 text-brand">
-              <Lock size={22} aria-hidden="true" />
+      <div className="flex min-h-screen items-center justify-center px-6 py-16">
+        <div className="w-full max-w-md border border-hairline bg-surface p-6 sm:p-8">
+          <div className="space-y-3 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xs border border-hairline text-brand">
+              <Lock size={20} aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-bold text-strong">Admin Login</h1>
-            <p className="text-xs text-silver">
+            <h1 className="font-display text-2xl tracking-tight text-strong">Admin Login</h1>
+            <p className="text-xs leading-relaxed text-silver">
               Enter your secure password to manage the Samrock portfolio.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleLogin} className="mt-8 space-y-4">
+            <div className="space-y-2.5">
               <label htmlFor="admin-password" className={labelClass}>
                 Password
               </label>
@@ -337,7 +330,7 @@ function AdminDashboard() {
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   aria-pressed={showPassword}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-silver transition hover:text-brand"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-xs p-1.5 text-silver transition hover:text-brand"
                 >
                   {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                 </button>
@@ -345,7 +338,7 @@ function AdminDashboard() {
             </div>
 
             {loginError && (
-              <p role="alert" className="text-xs font-semibold text-red-500 dark:text-red-400">
+              <p role="alert" className="text-xs font-medium text-danger">
                 Incorrect password. Please try again.
               </p>
             )}
@@ -355,12 +348,12 @@ function AdminDashboard() {
             </button>
           </form>
 
-          <div className="space-y-3 pt-2 text-center">
+          <div className="mt-6 space-y-4 border-t border-hairline pt-5 text-center">
             <button
               type="button"
               onClick={handleForgotPassword}
               disabled={recovery === 'sending'}
-              className="text-xs font-bold text-brand transition hover:underline disabled:opacity-50 disabled:no-underline"
+              className="eyebrow text-brand transition hover:text-strong disabled:opacity-50"
             >
               {recovery === 'idle' && 'Forgotten your password?'}
               {recovery === 'sending' && 'Sending recovery email...'}
@@ -370,9 +363,9 @@ function AdminDashboard() {
             <div>
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-silver transition hover:text-brand"
+                className="eyebrow inline-flex items-center gap-2 text-silver transition hover:text-strong"
               >
-                <ArrowLeft size={14} aria-hidden="true" /> Back to portfolio
+                <ArrowLeft size={13} aria-hidden="true" /> Back to portfolio
               </Link>
             </div>
           </div>
@@ -382,20 +375,18 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-10 sm:p-10">
+    <div className="min-h-screen px-6 py-10 sm:p-10">
       <div className="mx-auto max-w-6xl space-y-8">
         <header className="flex flex-col items-center justify-between gap-6 border-b border-hairline pb-8 sm:flex-row">
           <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand/30 bg-surface-2 text-brand">
-              <Shield size={24} aria-hidden="true" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xs border border-hairline text-brand">
+              <Shield size={22} aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-strong sm:text-3xl">
+              <h1 className="font-display text-2xl tracking-tight text-strong sm:text-3xl">
                 Admin Dashboard
               </h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-brand">
-                Portfolio Manager
-              </p>
+              <p className="eyebrow mt-2 text-brand">Portfolio Manager</p>
             </div>
           </div>
           <div className="flex w-full items-center gap-3 sm:w-auto">
@@ -428,13 +419,13 @@ function AdminDashboard() {
                 aria-selected={isActive}
                 aria-controls={`panel-${id}`}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-2 pb-4 text-xs font-bold transition-colors sm:text-sm ${
+                className={`eyebrow flex items-center gap-2 whitespace-nowrap border-b-2 px-2 pb-4 transition-colors ${
                   isActive
                     ? 'border-brand text-brand'
                     : 'border-transparent text-silver hover:text-strong'
                 }`}
               >
-                <Icon size={18} aria-hidden="true" /> {label}
+                <Icon size={15} aria-hidden="true" /> {label}
               </button>
             );
           })}
@@ -450,7 +441,7 @@ function AdminDashboard() {
             <div className="space-y-8">
               <form onSubmit={handleSaveSettings} className={`${panelClass} space-y-8`}>
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline pb-4">
-                  <h2 className="text-xl font-black text-strong">General Profile</h2>
+                  <h2 className="font-display text-xl text-strong">General Profile</h2>
                   <SaveState dirty={settingsDirty} />
                 </div>
 
@@ -519,7 +510,7 @@ function AdminDashboard() {
               </form>
 
               <form onSubmit={handleChangePassword} className={`${panelClass} space-y-6`}>
-                <h2 className="border-b border-hairline pb-4 text-xl font-black text-strong">
+                <h2 className="border-b border-hairline pb-4 font-display text-xl text-strong">
                   Security &amp; Access
                 </h2>
                 <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-2 sm:gap-8">
@@ -542,7 +533,7 @@ function AdminDashboard() {
                         onClick={() => setShowNewPassword((value) => !value)}
                         aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
                         aria-pressed={showNewPassword}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-silver transition hover:text-brand"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-xs p-1.5 text-silver transition hover:text-brand"
                       >
                         {showNewPassword ? (
                           <EyeOff size={18} aria-hidden="true" />
@@ -563,13 +554,13 @@ function AdminDashboard() {
               </form>
 
               <section className={`${panelClass} space-y-6`}>
-                <h2 className="border-b border-hairline pb-4 text-xl font-black text-strong">
+                <h2 className="border-b border-hairline pb-4 font-display text-xl text-strong">
                   Marketing Assets
                 </h2>
-                <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-hairline bg-surface-2 p-6 sm:flex-row">
+                <div className="flex flex-col items-center justify-between gap-5 border border-hairline bg-surface-2 p-6 sm:flex-row">
                   <div className="text-center sm:text-left">
-                    <h3 className="font-bold text-strong">Official Studio Flyer</h3>
-                    <p className="mt-1 text-xs text-silver">High-resolution promotional material.</p>
+                    <h3 className="text-sm font-medium text-strong">Official Studio Flyer</h3>
+                    <p className="mt-1.5 text-xs text-silver">High-resolution promotional material.</p>
                   </div>
                   <a
                     href="/flyer.jpg"
@@ -587,7 +578,7 @@ function AdminDashboard() {
           {activeTab === 'beats' && (
             <div className="space-y-8">
               <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                <h2 className="text-2xl font-black tracking-tight text-strong">
+                <h2 className="font-display text-2xl tracking-tight text-strong">
                   Beat Store Inventory
                 </h2>
                 <div className="flex flex-col items-center gap-3 sm:flex-row">
@@ -607,7 +598,7 @@ function AdminDashboard() {
               </div>
 
               {beats.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-hairline bg-surface-2 p-10 text-center text-sm text-silver">
+                <p className="border border-dashed border-hairline bg-surface-2 p-12 text-center text-sm text-silver">
                   No beats yet. Add your first track to build the store.
                 </p>
               ) : (
@@ -698,7 +689,7 @@ function AdminDashboard() {
                           <div className="flex flex-col gap-1">
                             <label
                               htmlFor={`beat-bpm-${beat.id}`}
-                              className="text-xs font-black uppercase tracking-tight text-silver"
+                              className="eyebrow text-silver"
                             >
                               BPM
                             </label>
@@ -711,13 +702,13 @@ function AdminDashboard() {
                               onChange={(event) =>
                                 updateBeat(beat.id, { bpm: numberFromInput(event.target.value) })
                               }
-                              className="w-20 rounded-lg border border-hairline bg-surface-2 px-2 py-1.5 text-center text-sm font-black text-strong focus:border-brand focus:outline-none"
+                              className="w-20 rounded-xs border border-hairline bg-surface-3 px-2 py-2 text-center text-sm font-medium text-strong focus:border-brand focus:outline-none"
                             />
                           </div>
                           <div className="flex flex-col gap-1">
                             <label
                               htmlFor={`beat-key-${beat.id}`}
-                              className="text-xs font-black uppercase tracking-tight text-silver"
+                              className="eyebrow text-silver"
                             >
                               Musical Key
                             </label>
@@ -726,7 +717,7 @@ function AdminDashboard() {
                               type="text"
                               value={beat.key}
                               onChange={(event) => updateBeat(beat.id, { key: event.target.value })}
-                              className="w-24 rounded-lg border border-hairline bg-surface-2 px-2 py-1.5 text-center text-sm font-black text-strong focus:border-brand focus:outline-none"
+                              className="w-24 rounded-xs border border-hairline bg-surface-3 px-2 py-2 text-center text-sm font-medium text-strong focus:border-brand focus:outline-none"
                             />
                           </div>
                         </div>
@@ -748,7 +739,7 @@ function AdminDashboard() {
           {activeTab === 'placements' && (
             <div className="space-y-8">
               <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                <h2 className="text-2xl font-black tracking-tight text-strong">
+                <h2 className="font-display text-2xl tracking-tight text-strong">
                   Placement Records
                 </h2>
                 <div className="flex flex-col items-center gap-3 sm:flex-row">
@@ -772,7 +763,7 @@ function AdminDashboard() {
               </div>
 
               {placements.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-hairline bg-surface-2 p-10 text-center text-sm text-silver">
+                <p className="border border-dashed border-hairline bg-surface-2 p-12 text-center text-sm text-silver">
                   No placements yet. Add your first release credit.
                 </p>
               ) : (

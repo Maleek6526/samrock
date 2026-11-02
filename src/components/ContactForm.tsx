@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle, Mail, Phone, Send } from 'lucide-react';
+import { CheckCircle, Send } from 'lucide-react';
 import SectionHeading from '@/components/ui/SectionHeading';
 import { contactInfo, serviceOptions } from '@/lib/site';
 
@@ -15,9 +15,7 @@ const initialForm = {
   message: '',
 };
 
-const fieldClass =
-  'w-full rounded-xl border border-hairline bg-surface-3 px-4 py-3 text-sm text-strong transition placeholder:text-silver focus:border-brand focus:outline-none';
-const labelClass = 'text-xs font-semibold text-silver';
+const labelClass = 'eyebrow block text-silver';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState(initialForm);
@@ -54,204 +52,190 @@ export default function ContactForm() {
   };
 
   return (
-    <section id="contact" className="relative border-t border-hairline bg-surface px-4 py-24">
-      <div className="mx-auto max-w-4xl space-y-12">
+    <section id="contact" className="relative border-t border-hairline bg-surface px-6 py-24 sm:px-8">
+      <div className="mx-auto max-w-7xl">
         <SectionHeading
-          eyebrow="Get In Touch"
+          index="05"
+          eyebrow="Get in touch"
           title={
             <>
-              Book a <span className="text-gradient">Session</span>
+              Book a <em className="text-brand">session</em>
             </>
           }
-          description="Ready to record your next hit or secure a beat? Send an inquiry and it will reach Sam's Gmail and WhatsApp instantly."
+          description="Ready to record your next hit or secure a beat? Send an inquiry and it reaches Sam's Gmail and WhatsApp instantly."
         />
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="flex items-start gap-4 rounded-xl border border-hairline bg-surface-2 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand">
-              <Phone size={20} aria-hidden="true" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-silver">Call / WhatsApp</p>
+        <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+          <dl className="border-t border-hairline lg:col-span-4">
+            <div className="border-b border-hairline py-6">
+              <dt className="eyebrow text-silver">Call / WhatsApp</dt>
               {contactInfo.phones.map((phone) => (
-                <p key={phone} className="font-bold text-strong">
+                <dd key={phone} className="mt-3 text-sm font-medium tabular-nums text-strong">
                   {phone}
-                </p>
+                </dd>
               ))}
             </div>
+            <div className="border-b border-hairline py-6">
+              <dt className="eyebrow text-silver">Email</dt>
+              <dd className="mt-3 break-all text-sm font-medium text-strong">{contactInfo.email}</dd>
+            </div>
+            <div className="border-b border-hairline py-6">
+              <dt className="eyebrow text-silver">Response time</dt>
+              <dd className="mt-3 text-sm font-medium text-strong">Within 24 hours</dd>
+            </div>
+          </dl>
+
+          <div className="lg:col-span-8">
+            {status === 'success' ? (
+              <div className="border border-hairline bg-surface-2 px-6 py-16 text-center" role="status">
+                <CheckCircle size={28} className="mx-auto text-success" aria-hidden="true" />
+                <h3 className="mt-6 font-display text-title text-strong">Inquiry sent</h3>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-silver">
+                  Your message has been dispatched to Sam&apos;s Gmail and WhatsApp simultaneously.
+                  He will get back to you shortly.
+                </p>
+                <button type="button" onClick={() => setStatus('idle')} className="btn btn-ghost mt-8">
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-name" className={labelClass}>
+                      Your Full Name *
+                    </label>
+                    <input
+                      id="contact-name"
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="e.g. Maleek Adewale"
+                      className="field"
+                    />
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-artist" className={labelClass}>
+                      Artist / Stage Name
+                    </label>
+                    <input
+                      id="contact-artist"
+                      type="text"
+                      name="artistName"
+                      value={formData.artistName}
+                      onChange={handleChange}
+                      placeholder="e.g. Samrock"
+                      className="field"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-email" className={labelClass}>
+                      Email Address *
+                    </label>
+                    <input
+                      id="contact-email"
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="name@example.com"
+                      className="field"
+                    />
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-phone" className={labelClass}>
+                      WhatsApp Phone Number *
+                    </label>
+                    <input
+                      id="contact-phone"
+                      type="tel"
+                      name="phone"
+                      required
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder={contactInfo.phones[1]}
+                      className="field"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-service" className={labelClass}>
+                      Service Required *
+                    </label>
+                    <select
+                      id="contact-service"
+                      name="service"
+                      value={formData.service}
+                      onChange={handleChange}
+                      className="field"
+                    >
+                      {serviceOptions.map((service) => (
+                        <option key={service} value={service}>
+                          {service}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <label htmlFor="contact-budget" className={labelClass}>
+                      Estimated Budget (Optional)
+                    </label>
+                    <input
+                      id="contact-budget"
+                      type="text"
+                      name="budget"
+                      value={formData.budget}
+                      onChange={handleChange}
+                      placeholder="e.g. ₦50,000"
+                      className="field"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  <label htmlFor="contact-message" className={labelClass}>
+                    Project Details / Message
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    name="message"
+                    rows={4}
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Tell us about your track, BPM, reference songs, or session date..."
+                    className="field resize-none"
+                  />
+                </div>
+
+                <p aria-live="polite" className="text-xs font-medium text-danger">
+                  {status === 'error'
+                    ? 'Failed to send message. Please try again or message via WhatsApp directly.'
+                    : ''}
+                </p>
+
+                <button type="submit" disabled={status === 'loading'} className="btn btn-primary w-full">
+                  {status === 'loading' ? (
+                    <span>Sending to Gmail &amp; WhatsApp...</span>
+                  ) : (
+                    <>
+                      <Send size={16} aria-hidden="true" /> Send inquiry
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
-
-          <div className="flex items-start gap-4 rounded-xl border border-hairline bg-surface-2 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand">
-              <Mail size={20} aria-hidden="true" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-silver">Email Us</p>
-              <p className="break-all text-sm font-bold text-strong sm:text-base">{contactInfo.email}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative rounded-2xl border border-hairline bg-surface-2 p-8 shadow-2xl">
-          {status === 'success' ? (
-            <div className="space-y-4 py-12 text-center" role="status">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-green-500/40 bg-green-500/20 text-green-500">
-                <CheckCircle size={32} aria-hidden="true" />
-              </div>
-              <h3 className="text-2xl font-bold text-strong">Inquiry Sent Successfully!</h3>
-              <p className="mx-auto max-w-md text-sm text-silver">
-                Thank you! Your message has been dispatched to Sam&apos;s Gmail and WhatsApp
-                simultaneously. He will get back to you shortly.
-              </p>
-              <button
-                type="button"
-                onClick={() => setStatus('idle')}
-                className="mt-4 rounded-xl border border-hairline bg-surface-3 px-6 py-2.5 text-xs font-semibold text-brand transition hover:border-brand"
-              >
-                Send Another Message
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="contact-name" className={labelClass}>
-                    Your Full Name *
-                  </label>
-                  <input
-                    id="contact-name"
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="e.g. Maleek Adewale"
-                    className={fieldClass}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="contact-artist" className={labelClass}>
-                    Artist / Stage Name
-                  </label>
-                  <input
-                    id="contact-artist"
-                    type="text"
-                    name="artistName"
-                    value={formData.artistName}
-                    onChange={handleChange}
-                    placeholder="e.g. Samrock"
-                    className={fieldClass}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="contact-email" className={labelClass}>
-                    Email Address *
-                  </label>
-                  <input
-                    id="contact-email"
-                    type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="name@example.com"
-                    className={fieldClass}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="contact-phone" className={labelClass}>
-                    WhatsApp Phone Number *
-                  </label>
-                  <input
-                    id="contact-phone"
-                    type="tel"
-                    name="phone"
-                    required
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder={contactInfo.phones[1]}
-                    className={fieldClass}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="contact-service" className={labelClass}>
-                    Service Required *
-                  </label>
-                  <select
-                    id="contact-service"
-                    name="service"
-                    value={formData.service}
-                    onChange={handleChange}
-                    className={fieldClass}
-                  >
-                    {serviceOptions.map((service) => (
-                      <option key={service} value={service}>
-                        {service}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="contact-budget" className={labelClass}>
-                    Estimated Budget (Optional)
-                  </label>
-                  <input
-                    id="contact-budget"
-                    type="text"
-                    name="budget"
-                    value={formData.budget}
-                    onChange={handleChange}
-                    placeholder="e.g. ₦50,000"
-                    className={fieldClass}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="contact-message" className={labelClass}>
-                  Project Details / Message
-                </label>
-                <textarea
-                  id="contact-message"
-                  name="message"
-                  rows={4}
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Tell us about your track, BPM, reference songs, or session date..."
-                  className={`${fieldClass} resize-none`}
-                />
-              </div>
-
-              <p aria-live="polite" className="text-xs font-semibold text-red-500">
-                {status === 'error'
-                  ? 'Failed to send message. Please try again or message via WhatsApp directly.'
-                  : ''}
-              </p>
-
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-solid to-brand-strong py-4 text-base font-bold text-brand-contrast shadow-xl shadow-brand/20 transition hover:opacity-95 disabled:opacity-60"
-              >
-                {status === 'loading' ? (
-                  <span>Sending to Gmail &amp; WhatsApp...</span>
-                ) : (
-                  <>
-                    <Send size={18} aria-hidden="true" /> Send Inquiry Now
-                  </>
-                )}
-              </button>
-            </form>
-          )}
         </div>
       </div>
     </section>

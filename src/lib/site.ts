@@ -35,7 +35,7 @@ export const socialLinks = [
   { label: 'Facebook', href: 'https://www.facebook.com/share/1AFR8EaXHb/?mibextid=wwXIfr' },
   { label: 'Threads', href: 'https://www.threads.com/@samrock_music_production?invite=0' },
   { label: 'Audiomack', href: 'https://audiomack.com/adelanasamuel02' },
-  { label: 'TikTok', href: 'https://www.tiktok.com/@samrock_beatz?_r=1&_t=ZS-9B3Ds0pTKhG' },
+  { label: 'TikTok', href: 'https://www.tiktok.com/@samrock_beatz?_r=1&_t=ZS9B3Ds0pTKhG' },
 ] as const;
 
 /** Options offered by the contact form and the admin services copy. */

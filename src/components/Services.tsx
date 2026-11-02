@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowRight, CheckCircle2, Disc3, Mic2, Radio, Sliders } from 'lucide-react';
+import { ArrowRight, Disc3, Mic2, Radio, Sliders } from 'lucide-react';
 import SectionHeading from '@/components/ui/SectionHeading';
 import type { ServiceDefinition } from '@/lib/site';
 
@@ -38,59 +38,62 @@ const services: ServiceDefinition[] = [
 
 export default function Services() {
   return (
-    <section id="services" className="relative border-t border-hairline bg-surface px-4 py-24">
-      <div className="mx-auto max-w-7xl space-y-12">
+    <section id="services" className="relative border-t border-hairline bg-surface px-6 py-24 sm:px-8">
+      <div className="mx-auto max-w-7xl">
         <SectionHeading
-          eyebrow="Professional Expertise"
+          index="03"
+          eyebrow="Professional expertise"
           title={
             <>
-              Our <span className="text-gradient">Services</span>
+              What the studio <em className="text-brand">delivers</em>
             </>
           }
-          description="From raw concept to final master, Samrock Music Productions delivers world-class audio engineering and production."
+          description="From raw concept to final master: world-class production and audio engineering, end to end."
         />
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {services.map((service) => {
+        <ol className="mt-12 border-t border-hairline">
+          {services.map((service, index) => {
             const Icon = service.icon;
 
             return (
-              <div
-                key={service.title}
-                className="group flex flex-col justify-between gap-6 rounded-2xl border border-hairline bg-surface-2 p-8 shadow-xl transition duration-300 hover:border-brand/40"
-              >
-                <div className="space-y-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand/30 bg-surface-3 text-brand shadow-md">
-                    <Icon size={24} aria-hidden="true" />
+              <li key={service.title} className="group border-b border-hairline">
+                <div className="grid grid-cols-1 gap-x-10 gap-y-5 py-10 md:grid-cols-12">
+                  <div className="md:col-span-1">
+                    <span className="eyebrow text-brand">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-strong transition group-hover:text-brand">
-                    {service.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-silver">{service.description}</p>
-                </div>
 
-                <ul className="space-y-3 border-t border-hairline pt-4">
-                  {service.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-xs text-silver">
-                      <CheckCircle2 size={16} className="shrink-0 text-brand" aria-hidden="true" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <div className="md:col-span-4">
+                    <div className="flex items-center gap-3">
+                      <Icon size={18} className="shrink-0 text-silver transition group-hover:text-brand" aria-hidden="true" />
+                      <h3 className="font-display text-title text-strong">{service.title}</h3>
+                    </div>
+                    <a
+                      href="#contact"
+                      className="link-underline eyebrow mt-5 inline-flex items-center gap-2 text-brand"
+                    >
+                      Book this service
+                      <ArrowRight size={12} aria-hidden="true" />
+                    </a>
+                  </div>
 
-                <div>
-                  <a
-                    href="#contact"
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-brand transition hover:text-strong"
-                  >
-                    Book This Service
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </a>
+                  <p className="text-sm leading-relaxed text-silver md:col-span-4">
+                    {service.description}
+                  </p>
+
+                  <ul className="space-y-2 border-l border-hairline pl-5 md:col-span-3">
+                    {service.features.map((feature) => (
+                      <li key={feature} className="text-xs leading-relaxed text-silver">
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
       </div>
     </section>
   );

@@ -103,24 +103,24 @@ export default function AudioPlayer() {
 
   if (embedUrl) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand/30 bg-black/95 shadow-2xl backdrop-blur-xl animate-slide-up-panel">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 p-2 sm:p-3">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-hairline bg-surface/95 backdrop-blur-xl animate-slide-up-panel">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 p-2.5 sm:p-3">
           <div className="hidden w-1/4 items-center gap-3 sm:flex">
             {/* eslint-disable-next-line @next/next/no-img-element -- small remote thumbnail, sized by the container */}
             <img
               src={currentTrack.coverArt}
               alt=""
-              className="h-12 w-12 rounded-lg border border-brand/30 object-cover"
+              className="h-12 w-12 shrink-0 rounded-xs border border-hairline object-cover"
             />
             <div className="overflow-hidden">
-              <h4 className="truncate text-xs font-bold text-white">{currentTrack.title}</h4>
-              <p className="flex items-center gap-1 text-[10px] text-brand">
+              <h4 className="truncate text-xs font-medium text-strong">{currentTrack.title}</h4>
+              <p className="eyebrow mt-1.5 flex items-center gap-1.5 text-brand">
                 <ExternalLink size={10} aria-hidden="true" /> Streaming via {platform}
               </p>
             </div>
           </div>
 
-          <div className="relative h-[80px] flex-1 overflow-hidden rounded-xl bg-surface-3 sm:h-[100px]">
+          <div className="relative h-[80px] flex-1 overflow-hidden rounded-xs bg-surface-3 sm:h-[100px]">
             <div className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-2 text-silver">
               <Music className="animate-pulse" size={24} aria-hidden="true" />
               <span className="text-[10px]">Loading stream from {platform}…</span>
@@ -138,10 +138,11 @@ export default function AudioPlayer() {
           <button
             type="button"
             onClick={stop}
-            aria-label="Close player"
-            className="shrink-0 rounded-full bg-brand-solid p-2 text-brand-contrast shadow-lg transition hover:scale-105"
+            aria-label="Stop and close player"
+            title="Stop and close player"
+            className="shrink-0 rounded-xs border border-hairline-strong p-2.5 text-strong transition hover:border-brand hover:text-brand"
           >
-            <X size={20} aria-hidden="true" />
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -149,7 +150,7 @@ export default function AudioPlayer() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand/20 bg-surface-2/95 px-4 py-3 text-strong shadow-2xl backdrop-blur-md">
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-hairline bg-surface/95 px-6 py-4 text-strong backdrop-blur-xl animate-slide-up-panel">
       <audio
         ref={audioRef}
         src={currentTrack.audioUrl}
@@ -165,18 +166,18 @@ export default function AudioPlayer() {
           <img
             src={currentTrack.coverArt}
             alt=""
-            className="h-12 w-12 rounded-lg border border-brand/30 object-cover shadow-md"
+            className="h-12 w-12 shrink-0 rounded-xs border border-hairline object-cover"
           />
           <div className="overflow-hidden">
-            <h4 className="truncate text-sm font-bold text-strong">{currentTrack.title}</h4>
-            <p className="flex items-center gap-1 text-xs text-brand">
-              <Music size={12} aria-hidden="true" /> Samrock Production
+            <h4 className="truncate text-sm font-medium text-strong">{currentTrack.title}</h4>
+            <p className="eyebrow mt-1.5 flex items-center gap-1.5 text-brand">
+              <Music size={10} aria-hidden="true" /> Samrock Production
             </p>
           </div>
         </div>
 
         {/* Transport + scrubber */}
-        <div className="flex w-full flex-col items-center gap-1 md:w-2/4">
+        <div className="flex w-full flex-1 flex-col items-center gap-1">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -191,7 +192,7 @@ export default function AudioPlayer() {
               type="button"
               onClick={togglePlay}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-solid to-brand-strong text-brand-contrast shadow-lg transition hover:scale-105"
+              className="flex h-11 w-11 items-center justify-center rounded-xs bg-ink text-ink-contrast transition hover:bg-brand hover:text-brand-contrast"
             >
               {isPlaying ? (
                 <Pause size={20} aria-hidden="true" />
@@ -226,30 +227,45 @@ export default function AudioPlayer() {
           </div>
         </div>
 
-        {/* Volume */}
-        <div className="hidden w-1/4 items-center justify-end gap-2 md:flex">
+        {/* Volume + stop */}
+        <div className="flex w-full items-center justify-center gap-4 md:w-1/4 md:justify-end">
+          <div className="hidden items-center gap-2 md:flex">
+            <button
+              type="button"
+              onClick={toggleMute}
+              aria-label={isMuted || volume === 0 ? 'Unmute' : 'Mute'}
+              className="text-silver transition hover:text-brand"
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX size={18} aria-hidden="true" />
+              ) : (
+                <Volume2 size={18} aria-hidden="true" />
+              )}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={isMuted ? 0 : volume}
+              onChange={handleVolumeChange}
+              aria-label="Volume"
+              className="w-24"
+            />
+          </div>
+
+          {/* Pause keeps the bar pinned over the page; this tears it down entirely
+              so the footer and end of the page are reachable again. */}
           <button
             type="button"
-            onClick={toggleMute}
-            aria-label={isMuted || volume === 0 ? 'Unmute' : 'Mute'}
-            className="text-silver transition hover:text-brand"
+            onClick={stop}
+            aria-label="Stop and close player"
+            title="Stop and close player"
+            className="flex shrink-0 items-center justify-center gap-2 rounded-xs border border-hairline-strong px-4 py-2.5 text-silver transition hover:border-brand hover:text-brand"
           >
-            {isMuted || volume === 0 ? (
-              <VolumeX size={18} aria-hidden="true" />
-            ) : (
-              <Volume2 size={18} aria-hidden="true" />
-            )}
+            <X size={16} aria-hidden="true" />
+            <span className="eyebrow">Stop</span>
           </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={isMuted ? 0 : volume}
-            onChange={handleVolumeChange}
-            aria-label="Volume"
-            className="w-24"
-          />
         </div>
       </div>
     </div>

@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Cpu, Eye, Headphones, ShieldCheck, Sliders, Terminal, X } from 'lucide-react';
+import { Cpu, Eye, Headphones, ShieldCheck, Sliders, X } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
+import SectionHeading from '@/components/ui/SectionHeading';
 
 const rigItems = [
   { title: 'Universal Audio Apollo x8p', icon: Cpu },
@@ -16,55 +17,65 @@ export default function AboutStudio() {
   const [showFlyer, setShowFlyer] = useState(false);
 
   return (
-    <section id="about" className="relative border-t border-hairline bg-surface-3 px-4 py-24">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 lg:grid-cols-2">
-        <div className="space-y-8">
-          <h2 className="text-3xl font-extrabold tracking-tight text-strong sm:text-5xl">
-            About <span className="text-gradient">Samrock</span>
-          </h2>
+    <section id="about" className="relative border-t border-hairline bg-surface-3 px-6 py-24 sm:px-8">
+      <div className="mx-auto max-w-7xl">
+        <SectionHeading
+          index="04"
+          eyebrow="The studio"
+          title={
+            <>
+              Inside <em className="text-brand">Samrock</em>
+            </>
+          }
+        />
 
-          <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-strong sm:text-3xl">
-              Crafting Excellence at <span className="text-brand">Samrock Music Productions</span>
-            </h3>
-            <p className="text-lg leading-relaxed text-silver">
-              With over a decade of experience in the Nigerian music industry, Samrock has become a
-              cornerstone for artists seeking that signature professional sound. Our studio is more than just
-              a recording space; it&apos;s an innovation hub where musical ideas are transformed into global
-              hits.
+        <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-6">
+            <p className="text-lede text-strong">
+              With over a decade in the Nigerian music industry, Samrock has become a cornerstone
+              for artists seeking that signature professional sound.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <span className="flex items-center gap-2 rounded-xl border border-brand/20 bg-brand/10 px-4 py-2 text-sm font-bold text-brand">
-                <Terminal size={18} aria-hidden="true" /> Professional Sound Engineering
-              </span>
+            <p className="mt-6 text-sm leading-relaxed text-silver">
+              Our studio is more than a recording space; it is an innovation hub where musical ideas
+              are transformed into global hits built on two disciplines that never separate:
+              engineering and instinct.
+            </p>
+
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-hairline pt-6">
+              <span className="eyebrow text-silver">Professional sound engineering</span>
               <button
                 type="button"
                 onClick={() => setShowFlyer(true)}
-                className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand/10 px-4 py-2 text-sm font-bold text-brand transition hover:border-brand"
+                className="link-underline eyebrow inline-flex items-center gap-2 text-brand"
               >
-                <Eye size={18} aria-hidden="true" /> View Studio Flyer
+                <Eye size={14} aria-hidden="true" /> View studio flyer
               </button>
             </div>
           </div>
+
+          <div className="lg:col-span-6">
+            <p className="eyebrow text-silver">In the room</p>
+            <ul className="mt-6 border-t border-hairline">
+              {rigItems.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <li
+                    key={item.title}
+                    className="group flex items-center gap-4 border-b border-hairline py-5"
+                  >
+                    <Icon
+                      size={18}
+                      className="shrink-0 text-silver transition group-hover:text-brand"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium text-strong">{item.title}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
-
-        <ul className="grid grid-cols-2 gap-4">
-          {rigItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <li
-                key={item.title}
-                className="group rounded-2xl border border-hairline bg-surface-2 p-6 transition hover:border-brand"
-              >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand transition group-hover:scale-110">
-                  <Icon size={24} aria-hidden="true" />
-                </div>
-                <h3 className="text-base font-bold text-strong">{item.title}</h3>
-              </li>
-            );
-          })}
-        </ul>
       </div>
 
       <Modal
@@ -73,15 +84,15 @@ export default function AboutStudio() {
         label="Samrock Music Productions studio flyer"
         className="max-w-lg"
       >
-        <div className="relative overflow-hidden rounded-2xl border border-hairline-strong bg-surface-2 shadow-2xl">
+        <div className="relative overflow-hidden border border-hairline-strong bg-surface-2">
           <button
             type="button"
             onClick={() => setShowFlyer(false)}
             aria-label="Close flyer"
             title="Close (Esc)"
-            className="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-brand"
+            className="eyebrow absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-xs bg-ink/85 px-3 py-2 text-ink-contrast backdrop-blur-sm transition hover:bg-brand hover:text-brand-contrast"
           >
-            <X size={16} aria-hidden="true" /> Close
+            <X size={14} aria-hidden="true" /> Close
           </button>
           <div className="max-h-[80vh] overflow-auto">
             <Image

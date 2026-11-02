@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'coresg-normal.trae.ai',
+        pathname: '/**',
+      },
     ],
   },
   turbopack: {

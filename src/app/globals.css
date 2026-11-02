@@ -2,32 +2,45 @@
 @config "../../tailwind.config.js";
 
 /* ==========================================================================
-   Samrock design tokens
-   Palette derived from the logo: charcoal + vibrant orange.
-   Every token flips with the theme, so components never hard-code a
+   Samrock design system : "Editorial Noir"
+
+   Two rules hold the whole system together:
+
+     1. Orange is an accent, never a field. It appears on roughly one element
+        per screen (an active state, an index numeral, a link, one word of a
+        headline) and nowhere else. Filled buttons are ink, not orange.
+     2. Structure is drawn with 1px hairlines. There are no drop shadows, no
+        filled card boxes, and a single structural radius (rounded-xs = 2px).
+
+   Every token below flips with the theme, so components never hand-code a
    light/dark colour pair for the same role.
    ========================================================================== */
 
 :root {
   color-scheme: light;
 
-  --surface: #ffffff;        /* page background */
-  --surface-2: #ffffff;      /* cards */
-  --surface-3: #f4f6f8;      /* inset fields, tiles */
-  --hairline: #e2e8f0;       /* borders */
-  --hairline-strong: #cbd5e1;
+  /* Warm paper canvas. Nothing is pure #fff: a pure white page sitting next to
+     a cold blue-grey inset was what made the previous palette read as a
+     default admin theme rather than a studio. */
+  --surface: #faf8f5;
+  --surface-2: #ffffff;
+  --surface-3: #f2ede6; /* recessed: inputs, tiles */
 
-  --brand: #c2410c;          /* accent text / icons / borders (4.6:1 on white) */
-  --brand-solid: #c2410c;    /* filled control background */
-  --brand-strong: #9a3412;   /* filled control gradient end */
-  --brand-contrast: #ffffff; /* text on a filled brand background */
+  --hairline: #e5ded3;
+  --hairline-strong: #cdc3b4;
 
-  --strong: #111827;         /* headings / primary text */
-  --silver: #52606d;         /* body / muted text (7:1 on white) */
+  --strong: #1a1815; /* headings : 16.7:1 on the canvas */
+  --silver: #6b655d; /* body / muted : 5.4:1 on the canvas */
 
-  --grad-from: #9a3412;
-  --grad-via: #c2410c;
-  --grad-to: #ea580c;
+  --brand: #b3400a; /* accent text, icons, borders : 5.4:1 on the canvas */
+  --brand-solid: #b3400a;
+  --brand-contrast: #ffffff;
+
+  --ink: #1a1815; /* solid button fill */
+  --ink-contrast: #faf8f5;
+
+  --success: #15803d; /* 4.7:1 on the canvas */
+  --danger: #b91c1c; /* 6.1:1 on the canvas */
 
   --background: var(--surface);
   --foreground: var(--strong);
@@ -36,23 +49,24 @@
 .dark {
   color-scheme: dark;
 
-  --surface: #2e2e2e;
-  --surface-2: #3a3a3a;
-  --surface-3: #262626;
-  --hairline: #525252;
-  --hairline-strong: #6b6b6b;
+  --surface: #0a0a0b;
+  --surface-2: #131315;
+  --surface-3: #060607;
+  --hairline: #26262b;
+  --hairline-strong: #3d3d45;
 
-  --brand: #ff8c00;          /* 5.8:1 on charcoal */
-  --brand-solid: #c2410c;
-  --brand-strong: #9a3412;
-  --brand-contrast: #ffffff;
+  --strong: #f5f2ee;
+  --silver: #9c9894;
 
-  --strong: #ffffff;
-  --silver: #b4b4b9;
+  --brand: #ff8c00; /* 8.6:1 on the canvas */
+  --brand-solid: #ff8c00;
+  --brand-contrast: #0a0a0b; /* dark ink on the accent fill, never white */
 
-  --grad-from: #ff8c00;
-  --grad-via: #ffb347;
-  --grad-to: #ffe0b2;
+  --ink: #f5f2ee;
+  --ink-contrast: #0a0a0b;
+
+  --success: #4ade80;
+  --danger: #f87171;
 
   --background: var(--surface);
   --foreground: var(--strong);
@@ -70,19 +84,47 @@
 
   --color-brand: var(--brand);
   --color-brand-solid: var(--brand-solid);
-  --color-brand-strong: var(--brand-strong);
   --color-brand-contrast: var(--brand-contrast);
+
+  --color-ink: var(--ink);
+  --color-ink-contrast: var(--ink-contrast);
 
   --color-strong: var(--strong);
   --color-silver: var(--silver);
 
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, 'Times New Roman', serif;
 }
+
+/* Fluid type scale. Sizes interpolate between breakpoints instead of stepping,
+   so headlines never sit at a size that was chosen for a wider viewport. */
+@theme {
+  --text-hero: clamp(3rem, 8.5vw, 7rem);
+  --text-hero--line-height: 0.94;
+  --text-hero--letter-spacing: -0.03em;
+
+  --text-display: clamp(2.25rem, 5vw, 4.25rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-title: clamp(1.375rem, 2.2vw, 1.875rem);
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.01em;
+
+  --text-lede: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  --text-lede--line-height: 1.65;
+}
+
+/* Chrome sizes : the small uppercase label and the button face live on the
+   .eyebrow and .btn component classes below, so they are not repeated here. */
 
 @layer base {
   html {
-    /* Keeps anchored sections clear of the fixed 6rem navbar. */
-    scroll-padding-top: 7rem;
+    /* Keeps anchored sections clear of the fixed navbar (5rem, 6rem from `sm`). */
+    scroll-padding-top: 6rem;
   }
 
   body {
@@ -97,8 +139,8 @@
   }
 
   ::selection {
-    background: var(--brand-solid);
-    color: #ffffff;
+    background: var(--brand);
+    color: var(--brand-contrast);
   }
 
   /* Range inputs get a 24px touch target with a slim painted track. */
@@ -111,64 +153,169 @@
   }
 
   input[type='range']::-webkit-slider-runnable-track {
-    height: 4px;
+    height: 2px;
     border-radius: 9999px;
-    background: var(--hairline);
+    background: var(--hairline-strong);
   }
 
   input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     margin-top: -5px;
     border-radius: 9999px;
     background: var(--brand-solid);
-    border: 2px solid var(--surface);
   }
 
   input[type='range']::-moz-range-track {
-    height: 4px;
+    height: 2px;
     border-radius: 9999px;
-    background: var(--hairline);
+    background: var(--hairline-strong);
   }
 
   input[type='range']::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border: none;
     border-radius: 9999px;
     background: var(--brand-solid);
   }
 }
 
-/* Hides scrollbars on horizontal scrollers without disabling scrolling. */
-@utility no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+@layer components {
+  /* --- Buttons ----------------------------------------------------------- */
 
-  &::-webkit-scrollbar {
-    display: none;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 2px;
+    padding: 0.875rem 1.75rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--ink-contrast);
+  }
+
+  /* The single place a filled orange surface is allowed to appear. */
+  .btn-primary:hover {
+    background: var(--brand);
+    color: var(--brand-contrast);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--hairline-strong);
+    color: var(--strong);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* --- Labels ------------------------------------------------------------ */
+
+  .eyebrow {
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  /* --- Surfaces ---------------------------------------------------------- */
+
+  .card {
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover {
+    border-color: var(--hairline-strong);
+  }
+
+  .field {
+    width: 100%;
+    background: var(--surface-3);
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    color: var(--strong);
+    transition: border-color 0.25s;
+  }
+
+  .field::placeholder {
+    color: var(--silver);
+    opacity: 0.65;
+  }
+
+  .field:focus {
+    border-color: var(--brand);
+  }
+
+  /* --- Detail ------------------------------------------------------------ */
+
+  /* Underline that draws itself in on hover. Reserved for nav + text links, so
+     it stays a detail rather than a decoration applied everywhere. */
+  .link-underline {
+    position: relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.35rem;
+    height: 1px;
+    width: 100%;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    transform: scaleX(1);
   }
 }
 
-/* Gradient headline text, legible in both themes. */
-@utility text-gradient {
-  background-image: linear-gradient(
-    100deg,
-    var(--grad-from),
-    var(--grad-via) 55%,
-    var(--grad-to)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Artwork sits desaturated until the pointer reaches it : the single most
+   effective way to make a grid of stock covers feel curated. */
+@media (prefers-reduced-motion: no-preference) {
+  .media-tone img {
+    filter: grayscale(100%) contrast(1.04);
+    transition: filter 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .media-tone:hover img,
+  .media-tone:focus-within img {
+    filter: grayscale(0%);
+    transform: scale(1.03);
+  }
 }
 
-/* Replaces the previously dead `animate-in` / `slide-in-from-*` classes. */
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translate3d(0, 12px, 0);
+    transform: translate3d(0, 14px, 0);
   }
   to {
     opacity: 1;
@@ -197,7 +344,7 @@
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-fade-in {
