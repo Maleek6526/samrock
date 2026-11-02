@@ -1,50 +1,93 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Beat, Track, initialBeats } from '@/data/initialData';
+
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import type { Track } from '@/data/initialData';
 
 interface AudioContextType {
   currentTrack: Track | null;
   isPlaying: boolean;
-  playTrack: (track: Track) => void;
+  /** True when the current track came from a list, so skipping makes sense. */
+  canSkip: boolean;
+  /** `queue` lets the player skip within the list the track was started from. */
+  playTrack: (track: Track, queue?: Track[]) => void;
   togglePlay: () => void;
-  beats: Beat[];
+  pause: () => void;
+  stop: () => void;
+  playNext: () => void;
+  playPrevious: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
+function isPlayable(track: Track) {
+  return Boolean(track.audioUrl || track.link);
+}
+
 export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [beats, setBeats] = useState<Beat[]>(initialBeats);
+  const [queue, setQueue] = useState<Track[]>([]);
+  const [queueIndex, setQueueIndex] = useState(0);
 
-  useEffect(() => {
-    // Sync beats with localStorage if admin made changes
-    const savedBeats = localStorage.getItem('beats');
-    if (savedBeats) setBeats(JSON.parse(savedBeats));
+  const playTrack = useCallback((track: Track, nextQueue?: Track[]) => {
+    if (!isPlayable(track)) return;
 
-    // Optional: Listen for storage events to sync across tabs if needed
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'beats') setBeats(JSON.parse(e.newValue || '[]'));
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+    const list = nextQueue && nextQueue.length > 0 ? nextQueue : [track];
+    const index = list.findIndex((item) => item.id === track.id);
 
-  const playTrack = (track: Track) => {
-    if (!track.audioUrl && !(track as any).link) return;
+    setQueue(list);
+    setQueueIndex(index >= 0 ? index : 0);
     setCurrentTrack(track);
     setIsPlaying(true);
-  };
+  }, []);
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlay = useCallback(() => {
+    setIsPlaying((playing) => !playing);
+  }, []);
 
-  return (
-    <AudioContext.Provider value={{ currentTrack, isPlaying, playTrack, togglePlay, beats }}>
-      {children}
-    </AudioContext.Provider>
+  const pause = useCallback(() => {
+    setIsPlaying(false);
+  }, []);
+
+  const stop = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentTrack(null);
+    setQueue([]);
+    setQueueIndex(0);
+  }, []);
+
+  const playNext = useCallback(() => {
+    if (queue.length === 0) return;
+    const next = (queueIndex + 1) % queue.length;
+    setQueueIndex(next);
+    setCurrentTrack(queue[next]);
+    setIsPlaying(true);
+  }, [queue, queueIndex]);
+
+  const playPrevious = useCallback(() => {
+    if (queue.length === 0) return;
+    const previous = (queueIndex - 1 + queue.length) % queue.length;
+    setQueueIndex(previous);
+    setCurrentTrack(queue[previous]);
+    setIsPlaying(true);
+  }, [queue, queueIndex]);
+
+  const value = useMemo(
+    () => ({
+      currentTrack,
+      isPlaying,
+      canSkip: queue.length > 1,
+      playTrack,
+      togglePlay,
+      pause,
+      stop,
+      playNext,
+      playPrevious,
+    }),
+    [currentTrack, isPlaying, queue.length, playTrack, togglePlay, pause, stop, playNext, playPrevious]
   );
+
+  return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
 };
 
 export const useAudio = () => {

@@ -1,25 +1,223 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
+/* ==========================================================================
+   Samrock design tokens
+   Palette derived from the logo: charcoal + vibrant orange.
+   Every token flips with the theme, so components never hard-code a
+   light/dark colour pair for the same role.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --surface: #ffffff;        /* page background */
+  --surface-2: #ffffff;      /* cards */
+  --surface-3: #f4f6f8;      /* inset fields, tiles */
+  --hairline: #e2e8f0;       /* borders */
+  --hairline-strong: #cbd5e1;
+
+  --brand: #c2410c;          /* accent text / icons / borders (4.6:1 on white) */
+  --brand-solid: #c2410c;    /* filled control background */
+  --brand-strong: #9a3412;   /* filled control gradient end */
+  --brand-contrast: #ffffff; /* text on a filled brand background */
+
+  --strong: #111827;         /* headings / primary text */
+  --silver: #52606d;         /* body / muted text (7:1 on white) */
+
+  --grad-from: #9a3412;
+  --grad-via: #c2410c;
+  --grad-to: #ea580c;
+
+  --background: var(--surface);
+  --foreground: var(--strong);
 }
 
 .dark {
-  --background: #2e2e2e;
-  --foreground: #f8fafc;
+  color-scheme: dark;
+
+  --surface: #2e2e2e;
+  --surface-2: #3a3a3a;
+  --surface-3: #262626;
+  --hairline: #525252;
+  --hairline-strong: #6b6b6b;
+
+  --brand: #ff8c00;          /* 5.8:1 on charcoal */
+  --brand-solid: #c2410c;
+  --brand-strong: #9a3412;
+  --brand-contrast: #ffffff;
+
+  --strong: #ffffff;
+  --silver: #b4b4b9;
+
+  --grad-from: #ff8c00;
+  --grad-via: #ffb347;
+  --grad-to: #ffe0b2;
+
+  --background: var(--surface);
+  --foreground: var(--strong);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+
+  --color-brand: var(--brand);
+  --color-brand-solid: var(--brand-solid);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-contrast: var(--brand-contrast);
+
+  --color-strong: var(--strong);
+  --color-silver: var(--silver);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html {
+    /* Keeps anchored sections clear of the fixed 6rem navbar. */
+    scroll-padding-top: 7rem;
+  }
+
+  body {
+    background: var(--surface);
+    color: var(--strong);
+  }
+
+  /* A single, theme-aware focus ring for every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--brand-solid);
+    color: #ffffff;
+  }
+
+  /* Range inputs get a 24px touch target with a slim painted track. */
+  input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 24px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--hairline);
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border-radius: 9999px;
+    background: var(--brand-solid);
+    border: 2px solid var(--surface);
+  }
+
+  input[type='range']::-moz-range-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--hairline);
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 9999px;
+    background: var(--brand-solid);
+  }
+}
+
+/* Hides scrollbars on horizontal scrollers without disabling scrolling. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Gradient headline text, legible in both themes. */
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--grad-from),
+    var(--grad-via) 55%,
+    var(--grad-to)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Replaces the previously dead `animate-in` / `slide-in-from-*` classes. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up-panel {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.animate-slide-up-panel {
+  animation: slide-up-panel 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
 }

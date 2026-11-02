@@ -1,9 +1,13 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { Shield, Heart, Music, MessageSquare } from 'lucide-react';
-import Link from 'next/link';
 
-// lucide-react v1.x removed brand/social logos, so these are provided as inline SVGs.
+import React, { useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Heart, MessageSquare, Music, Shield } from 'lucide-react';
+import { brandMark, contactInfo, socialLinks } from '@/lib/site';
+import { useSiteSettings } from '@/lib/store';
+
+// lucide-react v1.x removed brand logos, so the missing ones are inline SVGs.
 type BrandIconProps = { size?: number };
 
 const Youtube = ({ size = 18 }: BrandIconProps) => (
@@ -24,124 +28,127 @@ const Instagram = ({ size = 18 }: BrandIconProps) => (
   </svg>
 );
 
+const socialIcons: Record<string, React.ReactNode> = {
+  YouTube: <Youtube />,
+  Instagram: <Instagram />,
+  Facebook: <Facebook />,
+  Threads: <MessageSquare size={18} />,
+  Audiomack: <Music size={18} />,
+  TikTok: <span className="text-[10px] font-bold">TikTok</span>,
+};
+
+const footerLinks = [
+  { label: 'Beat Store', href: '#beats' },
+  { label: 'Discography', href: '#discography' },
+  { label: 'Services', href: '#services' },
+  { label: 'About & Gear', href: '#about' },
+  { label: 'Book Session', href: '#contact' },
+];
+
+const emptySubscribe = () => () => {};
+
+// The page is prerendered at build time, so reading the current year during the
+// first render would bake the build year into the static HTML. The server
+// snapshot is a constant and React swaps in the real year after hydration.
+const PRERENDER_YEAR = 2026;
+
+function useCopyrightYear() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => new Date().getFullYear(),
+    () => PRERENDER_YEAR
+  );
+}
+
 export default function Footer() {
-  const [settings, setSettings] = useState({
-    producerName: 'SAMROCK',
-    whatsappNumber: '07048306524',
-    whatsappNumber2: '08139972822'
-  });
-
-  const socials = [
-    { icon: <Youtube size={18} />, link: "https://youtube.com/@samrock_beatz?si=cd7CNheHGnn0UASP", label: "YouTube" },
-    { icon: <Instagram size={18} />, link: "https://www.instagram.com/invites/contact/?utm_content=mrjbm9f&srtk=10vv58bdz561l", label: "Instagram" },
-    { icon: <Facebook size={18} />, link: "https://www.facebook.com/share/1AFR8EaXHb/?mibextid=wwXIfr", label: "Facebook" },
-    { icon: <MessageSquare size={18} />, link: "https://www.threads.com/@samrock_music_production?invite=0", label: "Threads" },
-    { icon: <Music size={18} />, link: "https://audiomack.com/adelanasamuel02", label: "Audiomack" },
-    { icon: <span className="font-bold text-[10px]">TikTok</span>, link: "https://www.tiktok.com/@samrock_beatz?_r=1&_t=ZS-9B3Ds0pTKhG", label: "TikTok" },
-  ];
-
-  useEffect(() => {
-    const saved = localStorage.getItem('siteSettings');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setSettings({ 
-        producerName: parsed.producerName.split(' ')[0].toUpperCase(),
-        whatsappNumber: parsed.whatsappNumber,
-        whatsappNumber2: '08139972822' // Keep the other one as fallback/second
-      });
-    }
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'siteSettings') {
-        const parsed = JSON.parse(e.newValue || '{}');
-        if (parsed.producerName) {
-          setSettings(prev => ({ 
-            ...prev,
-            producerName: parsed.producerName.split(' ')[0].toUpperCase(),
-            whatsappNumber: parsed.whatsappNumber 
-          }));
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  const settings = useSiteSettings();
+  const copyrightYear = useCopyrightYear();
 
   return (
-    <footer className="bg-gray-50 dark:bg-samrock-dark border-t border-gray-200 dark:border-samrock-cyan/10 text-gray-600 dark:text-gray-400 py-16 px-4 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
-        
-        {/* Brand Col */}
+    <footer className="border-t border-hairline bg-surface-3 px-4 py-16 text-silver">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 md:grid-cols-4">
         <div className="space-y-4 md:col-span-2">
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-gray-100 dark:bg-samrock-card border border-gray-300 dark:border-samrock-cyan/50 overflow-hidden flex items-center justify-center shadow-md">
-              <img 
-                src="/logo.jpg" 
-                alt="Samrock Music Productions" 
-                className="w-full h-full object-cover scale-110"
+            <div className="h-14 w-14 overflow-hidden rounded-xl border border-hairline bg-surface-2 shadow-md sm:h-16 sm:w-16">
+              <Image
+                src="/logo.jpg"
+                alt=""
+                width={64}
+                height={64}
+                className="h-full w-full scale-110 object-cover"
               />
             </div>
-            <div className="flex flex-col group">
-              <span className="font-extrabold tracking-wider text-gray-900 dark:text-white text-xl group-hover:text-samrock-cyan transition">{settings.producerName}</span>
-              <span className="text-xs tracking-[0.2em] text-samrock-cyan uppercase font-bold">Music Productions</span>
-            </div>
+            <span className="group flex flex-col">
+              <span className="text-xl font-extrabold tracking-wider text-strong transition group-hover:text-brand">
+                {brandMark(settings.producerName)}
+              </span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand">
+                Music Productions
+              </span>
+            </span>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-sm">
-            Professional beat making, recording, mixing, mastering, and audio engineering. Delivering radio-ready records for the global music industry.
+          <p className="max-w-sm text-sm text-silver">
+            Professional beat making, recording, mixing, mastering, and audio engineering. Delivering
+            radio-ready records for the global music industry.
           </p>
-          
-          {/* Social Media Icons */}
-          <div className="flex flex-wrap gap-3 pt-4">
-            {socials.map((social, idx) => (
-              <a 
-                key={idx} 
-                href={social.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-gray-100 dark:bg-samrock-card border border-gray-300 dark:border-samrock-cyan/30 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-samrock-cyan hover:text-white dark:hover:bg-samrock-cyan dark:hover:text-white hover:border-samrock-cyan transition-all shadow-sm"
-                title={social.label}
-              >
-                {social.icon}
-              </a>
-            ))}
-          </div>
-        </div>
 
-        {/* Quick Links */}
-        <div className="space-y-3">
-          <h4 className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">Navigation</h4>
-          <ul className="space-y-2 text-sm">
-            <li><a href="#beats" className="hover:text-samrock-cyan transition">Beat Store</a></li>
-            <li><a href="#discography" className="hover:text-samrock-cyan transition">Discography</a></li>
-            <li><a href="#services" className="hover:text-samrock-cyan transition">Services</a></li>
-            <li><a href="#about" className="hover:text-samrock-cyan transition">About & Gear</a></li>
-            <li><a href="#contact" className="hover:text-samrock-cyan transition">Book Session</a></li>
+          <ul className="flex flex-wrap gap-3 pt-4">
+            {socialLinks.map((social) => (
+              <li key={social.label}>
+                <a
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  title={social.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-surface-2 text-silver shadow-sm transition hover:border-brand hover:bg-brand-solid hover:text-brand-contrast"
+                >
+                  {socialIcons[social.label]}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
 
-        {/* Admin / Contact */}
         <div className="space-y-3">
-          <h4 className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">Management</h4>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-strong">Navigation</h2>
+          <ul className="space-y-2 text-sm">
+            {footerLinks.map((link) => (
+              <li key={link.label}>
+                <a href={link.href} className="transition hover:text-brand">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-strong">Management</h2>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link href="/admin" className="inline-flex items-center gap-1.5 text-samrock-cyan hover:underline">
-                <Shield size={14} /> Admin Dashboard
+              <Link href="/admin" className="inline-flex items-center gap-1.5 text-brand hover:underline">
+                <Shield size={14} aria-hidden="true" /> Admin Dashboard
               </Link>
             </li>
-            <li className="text-xs text-gray-500 pt-2">
-              Hotline / WhatsApp: <br />
-              <strong className="text-gray-800 dark:text-gray-300">{settings.whatsappNumber2}</strong><br />
-              <strong className="text-gray-800 dark:text-gray-300">{settings.whatsappNumber}</strong>
+            <li className="pt-2 text-xs text-silver">
+              Hotline / WhatsApp:
+              {contactInfo.phones.map((phone) => (
+                <strong key={phone} className="block pt-1 text-strong">
+                  {phone}
+                </strong>
+              ))}
             </li>
           </ul>
         </div>
-
       </div>
 
-      <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
-        <p>© 2026 Samrock Music Productions. All rights reserved.</p>
+      <div className="mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-xs text-silver sm:flex-row">
+        <p>© {copyrightYear} Samrock Music Productions. All rights reserved.</p>
         <p className="flex items-center gap-1">
-          Designed & Engineered with <Heart size={12} className="text-red-500 fill-red-500" /> for the Culture
+          Designed &amp; Engineered with
+          <Heart size={12} className="fill-red-500 text-red-500" aria-hidden="true" />
+          for the Culture
         </p>
       </div>
     </footer>

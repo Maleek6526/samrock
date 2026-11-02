@@ -1,231 +1,378 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { Shield, Lock, Plus, Trash2, Save, ArrowLeft, CheckCircle, Music, Disc, Settings, Eye, EyeOff } from 'lucide-react';
+
+import React, { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { initialBeats, initialPlacements, Beat, Placement } from '@/data/initialData';
+import {
+  ArrowLeft,
+  CheckCircle,
+  Disc,
+  Eye,
+  EyeOff,
+  Lock,
+  Music,
+  Plus,
+  Save,
+  Settings,
+  Shield,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import type { Beat, Placement } from '@/data/initialData';
+import { type SiteSettings } from '@/lib/site';
+import {
+  STORAGE_KEYS,
+  readBeats,
+  readPlacements,
+  readSiteSettings,
+  readString,
+  saveBeats,
+  savePlacements,
+  saveSiteSettings,
+  writeString,
+} from '@/lib/store';
+
+/** Prototype-only default. The live value is persisted in localStorage. */
+const DEFAULT_ADMIN_PASSWORD = 'samrock123';
+
+const GENRES = ['Afrobeats', 'Reggae', 'Woro', 'Trap', 'Highlife'] as const;
+
+const TABS = [
+  { id: 'general', label: 'Profile Settings', Icon: Settings },
+  { id: 'beats', label: 'Beat Store', Icon: Music },
+  { id: 'placements', label: 'Placements', Icon: Disc },
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
+
+/**
+ * Numeric fields are edited as text so an empty input stays empty instead of
+ * collapsing to `NaN` (which used to render as "₦NaN" across the site).
+ */
+type BeatDraft = Omit<Beat, 'bpm' | 'price'> & { bpm: number | ''; price: number | '' };
+
+const panelClass = 'rounded-2xl border border-hairline bg-surface p-6 shadow-xl sm:p-8';
+const fieldClass =
+  'w-full rounded-xl border border-hairline bg-surface-2 px-4 py-3 text-sm font-medium text-strong transition placeholder:text-silver focus:border-brand focus:outline-none';
+const labelClass = 'block text-xs font-bold uppercase tracking-wider text-silver';
+const primaryButton =
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-solid px-6 py-3 text-sm font-bold text-brand-contrast shadow-lg shadow-brand/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50';
+const ghostButton =
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-2 px-6 py-3 text-sm font-bold text-strong transition hover:border-brand disabled:opacity-50';
+const dangerButton =
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-6 py-3 text-sm font-bold text-red-600 transition hover:bg-red-500/20 dark:text-red-400';
+
+function numberFromInput(raw: string): number | '' {
+  if (raw.trim() === '') return '';
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : '';
+}
+
+function toStoredBeats(drafts: BeatDraft[]): Beat[] {
+  return drafts.map((draft) => ({
+    ...draft,
+    bpm: typeof draft.bpm === 'number' ? draft.bpm : 0,
+    price: typeof draft.price === 'number' ? draft.price : 0,
+  }));
+}
+
+function SaveState({ dirty }: { dirty: boolean }) {
+  return (
+    <span
+      className="text-xs font-bold"
+      role="status"
+      aria-live="polite"
+    >
+      {dirty ? (
+        <span className="text-brand">Unsaved changes</span>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-silver">
+          <CheckCircle size={14} aria-hidden="true" /> Saved
+        </span>
+      )}
+    </span>
+  );
+}
+
+const emptySubscribe = () => () => {};
+
+/** The dashboard seeds its draft from localStorage, so it must mount client-side only. */
+function useIsClient() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
 
 export default function AdminPage() {
+  const isClient = useIsClient();
+
+  if (!isClient) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <p className="text-sm font-medium text-silver" role="status">
+          Loading dashboard...
+        </p>
+      </div>
+    );
+  }
+
+  return <AdminDashboard />;
+}
+
+function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [adminPassword, setAdminPassword] = useState('samrock123');
+  const [storedPassword, setStoredPassword] = useState(() =>
+    readString(STORAGE_KEYS.password, DEFAULT_ADMIN_PASSWORD)
+  );
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [error, setError] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [passwordSaved, setPasswordSaved] = useState(false);
-  const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'general' | 'beats' | 'discography'>('general');
+  const [loginError, setLoginError] = useState(false);
+  const [recovery, setRecovery] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [activeTab, setActiveTab] = useState<TabId>('general');
 
-  // Persistence Logic
-  const [siteSettings, setSiteSettings] = useState({
-    producerName: 'Samrock Music Productions',
-    whatsappNumber: '07048306524',
-    email: 'samrockmusicproduction@gmail.com',
-    statusBadge: 'Available for Placements, Beats & Studio Sessions'
-  });
+  // Drafts. Nothing is written to localStorage until the matching Save button is pressed.
+  const [settings, setSettings] = useState<SiteSettings>(readSiteSettings);
+  const [savedSettings, setSavedSettings] = useState<SiteSettings>(readSiteSettings);
+  const [beats, setBeats] = useState<BeatDraft[]>(readBeats);
+  const [savedBeats, setSavedBeats] = useState<Beat[]>(readBeats);
+  const [placements, setPlacements] = useState<Placement[]>(readPlacements);
+  const [savedPlacements, setSavedPlacements] = useState<Placement[]>(readPlacements);
 
-  const [beats, setBeats] = useState<Beat[]>([]);
-  const [placements, setPlacements] = useState<Placement[]>([]);
+  const settingsDirty = useMemo(
+    () => JSON.stringify(settings) !== JSON.stringify(savedSettings),
+    [settings, savedSettings]
+  );
+  const beatsDirty = useMemo(
+    () => JSON.stringify(toStoredBeats(beats)) !== JSON.stringify(savedBeats),
+    [beats, savedBeats]
+  );
+  const placementsDirty = useMemo(
+    () => JSON.stringify(placements) !== JSON.stringify(savedPlacements),
+    [placements, savedPlacements]
+  );
 
-  useEffect(() => {
-    // Load data from localStorage
-    const savedSettings = localStorage.getItem('siteSettings');
-    if (savedSettings) setSiteSettings(JSON.parse(savedSettings));
-
-    const savedPassword = localStorage.getItem('adminPassword');
-    if (savedPassword) setAdminPassword(savedPassword);
-
-    const savedBeats = localStorage.getItem('beats');
-    setBeats(savedBeats ? JSON.parse(savedBeats) : initialBeats);
-
-    const savedPlacements = localStorage.getItem('placements');
-    setPlacements(savedPlacements ? JSON.parse(savedPlacements) : initialPlacements);
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === adminPassword || password === 'admin') {
+  const handleLogin = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (password === storedPassword) {
       setIsAuthenticated(true);
-      setError(false);
+      setLoginError(false);
+      setPassword('');
     } else {
-      setError(true);
+      setLoginError(true);
     }
   };
 
   const handleForgotPassword = async () => {
-    setRecoveryStatus('sending');
+    if (recovery === 'sending') return;
+    setRecovery('sending');
+
     try {
-      // Use the same contact API to send the recovery email
-      const res = await fetch('/api/contact', {
+      // Recovery is emailed only, to the studio's own inbox. The WhatsApp channel
+      // is skipped so the credential never lands in a chat thread.
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: 'System Recovery',
+          name: 'Admin Recovery',
           artistName: 'Admin Security',
-          email: 'security@samrock.studio',
-          phone: siteSettings.whatsappNumber,
+          email: settings.email,
+          phone: settings.whatsappNumber,
           service: 'Password Recovery',
           budget: 'N/A',
-          message: `🚨 *Admin Password Recovery Request* 🚨\n\nYour current admin password is: *${adminPassword}*\n\nIf you did not request this, please change your password immediately in the admin dashboard.`
-        })
+          channel: 'email',
+          message: `A password recovery was requested from the admin dashboard.\n\nCurrent admin password: ${storedPassword}\n\nIf this was not you, open the dashboard and change the password immediately.`,
+        }),
       });
 
-      if (res.ok) {
-        setRecoveryStatus('success');
-      } else {
-        setRecoveryStatus('error');
-      }
-    } catch (err) {
-      console.error(err);
-      setRecoveryStatus('error');
+      const data = await response.json().catch(() => null);
+      setRecovery(response.ok && data?.success ? 'sent' : 'error');
+    } catch (error) {
+      console.error(error);
+      setRecovery('error');
     }
-    setTimeout(() => setRecoveryStatus('idle'), 5000);
+
+    window.setTimeout(() => setRecovery('idle'), 6000);
   };
 
-  const handleSaveGeneral = (e: React.FormEvent) => {
-    e.preventDefault();
-    localStorage.setItem('siteSettings', JSON.stringify(siteSettings));
-    toast.success('Profile settings saved successfully!');
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSaveSettings = (event: React.FormEvent) => {
+    event.preventDefault();
+    saveSiteSettings(settings);
+    setSavedSettings(settings);
+    toast.success('Profile settings saved.');
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPassword.trim()) return;
-    localStorage.setItem('adminPassword', newPassword);
-    setAdminPassword(newPassword);
+  const handleChangePassword = (event: React.FormEvent) => {
+    event.preventDefault();
+    const next = newPassword.trim();
+    if (next.length < 6) {
+      toast.error('Use at least 6 characters for the admin password.');
+      return;
+    }
+    writeString(STORAGE_KEYS.password, next);
+    setStoredPassword(next);
     setNewPassword('');
-    toast.success('Admin password updated successfully!');
-    setPasswordSaved(true);
-    setTimeout(() => setPasswordSaved(false), 3000);
+    toast.success('Admin password updated.');
   };
 
-  const saveBeats = (newBeats: Beat[]) => {
-    setBeats(newBeats);
-    localStorage.setItem('beats', JSON.stringify(newBeats));
-    toast.success('Beat inventory updated');
+  const handleSaveBeats = () => {
+    if (beats.some((beat) => beat.bpm === '' || beat.price === '')) {
+      toast.error('Set a BPM and a price for every beat before saving.');
+      return;
+    }
+    const stored = toStoredBeats(beats);
+    saveBeats(stored);
+    setSavedBeats(stored);
+    toast.success('Beat store saved.');
   };
 
-  const savePlacements = (newPlacements: Placement[]) => {
-    setPlacements(newPlacements);
-    localStorage.setItem('placements', JSON.stringify(newPlacements));
-    toast.success('Placements records updated');
+  const handleSavePlacements = () => {
+    savePlacements(placements);
+    setSavedPlacements(placements);
+    toast.success('Placements saved.');
   };
 
   const addBeat = () => {
-    const newBeat: Beat = {
-      id: Date.now().toString(),
-      title: 'New Beat',
-      artist: 'Samrock',
-      genre: 'Afrobeats',
-      bpm: 100,
-      key: 'Cmaj',
-      price: 25000,
-      audioUrl: '',
-      coverArt: ''
-    };
-    saveBeats([...beats, newBeat]);
-  };
-
-  const updateBeat = (id: string, field: keyof Beat, value: string | number) => {
-    const newBeats = beats.map(b => b.id === id ? { ...b, [field]: value } : b);
-    saveBeats(newBeats);
-  };
-
-  const deleteBeat = (id: string) => {
-    toast.warning('Are you sure you want to delete this beat?', {
-      action: {
-        label: 'Delete',
-        onClick: () => {
-          saveBeats(beats.filter(b => b.id !== id));
-          toast.success('Beat deleted');
-        },
+    setBeats((current) => [
+      ...current,
+      {
+        id: `beat-${Date.now()}`,
+        title: 'New Beat',
+        artist: 'Samrock',
+        genre: 'Afrobeats',
+        bpm: 100,
+        key: 'Cmaj',
+        price: 25000,
+        audioUrl: '',
+        coverArt: '',
       },
+    ]);
+    toast.info('New beat added. Save the inventory to publish it.');
+  };
+
+  const updateBeat = (id: string, patch: Partial<BeatDraft>) => {
+    setBeats((current) => current.map((beat) => (beat.id === id ? { ...beat, ...patch } : beat)));
+  };
+
+  const removeBeat = (id: string) => {
+    setBeats((current) => current.filter((beat) => beat.id !== id));
+  };
+
+  const confirmRemoveBeat = (id: string) => {
+    const beat = beats.find((item) => item.id === id);
+    toast.warning(`Remove "${beat?.title || 'this beat'}" from the inventory?`, {
+      action: { label: 'Remove', onClick: () => removeBeat(id) },
     });
   };
 
   const addPlacement = () => {
-    const newPlacement: Placement = {
-      id: Date.now().toString(),
-      title: 'New Release',
-      artist: 'Unknown Artist',
-      role: 'Producer',
-      year: new Date().getFullYear().toString(),
-      coverArt: '',
-      link: '',
-      audioUrl: ''
-    };
-    savePlacements([...placements, newPlacement]);
-  };
-
-  const updatePlacement = (id: string, field: keyof Placement, value: string) => {
-    const newPlacements = placements.map(p => p.id === id ? { ...p, [field]: value } : p);
-    savePlacements(newPlacements);
-  };
-
-  const deletePlacement = (id: string) => {
-    toast.warning('Are you sure you want to delete this placement?', {
-      action: {
-        label: 'Delete',
-        onClick: () => {
-          savePlacements(placements.filter(p => p.id !== id));
-          toast.success('Placement deleted');
-        },
+    setPlacements((current) => [
+      ...current,
+      {
+        id: `placement-${Date.now()}`,
+        title: 'New Release',
+        artist: 'Unknown Artist',
+        role: 'Producer',
+        year: String(new Date().getFullYear()),
+        coverArt: '',
+        link: '',
+        audioUrl: '',
       },
+    ]);
+    toast.info('New placement added. Save the records to publish it.');
+  };
+
+  const updatePlacement = (id: string, patch: Partial<Placement>) => {
+    setPlacements((current) =>
+      current.map((placement) => (placement.id === id ? { ...placement, ...patch } : placement))
+    );
+  };
+
+  const removePlacement = (id: string) => {
+    setPlacements((current) => current.filter((placement) => placement.id !== id));
+  };
+
+  const confirmRemovePlacement = (id: string) => {
+    const placement = placements.find((item) => item.id === id);
+    toast.warning(`Remove "${placement?.title || 'this placement'}" from the records?`, {
+      action: { label: 'Remove', onClick: () => removePlacement(id) },
     });
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white dark:bg-samrock-dark flex items-center justify-center px-4 transition-colors duration-300">
-        <div className="max-w-md w-full bg-white dark:bg-samrock-card border border-gray-200 dark:border-samrock-cyan/30 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl">
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 bg-samrock-cyan/10 dark:bg-samrock-cyan/20 border border-samrock-cyan/40 rounded-full flex items-center justify-center mx-auto text-samrock-cyan">
-              <Lock size={22} />
+      <div className="flex min-h-screen items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md space-y-6 rounded-2xl border border-hairline bg-surface p-6 shadow-2xl sm:p-8">
+          <div className="space-y-2 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-brand/40 bg-brand/10 text-brand">
+              <Lock size={22} aria-hidden="true" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Login</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Enter your secure password to manage Samrock portfolio.</p>
+            <h1 className="text-2xl font-bold text-strong">Admin Login</h1>
+            <p className="text-xs text-silver">
+              Enter your secure password to manage the Samrock portfolio.
+            </p>
           </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password..."
-                className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-samrock-cyan transition pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-samrock-cyan transition"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+            <div className="space-y-2">
+              <label htmlFor="admin-password" className={labelClass}>
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="admin-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter admin password..."
+                  aria-invalid={loginError}
+                  className={`${fieldClass} pr-12`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-silver transition hover:text-brand"
+                >
+                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
+              </div>
             </div>
-            {error && <p className="text-xs text-red-500 dark:text-red-400 font-semibold">Incorrect password.</p>}
-            <button type="submit" className="w-full py-3 rounded-xl bg-gradient-to-r from-samrock-cyan to-orange-600 text-white font-bold text-sm shadow-lg shadow-samrock-cyan/20 hover:opacity-95 transition">
+
+            {loginError && (
+              <p role="alert" className="text-xs font-semibold text-red-500 dark:text-red-400">
+                Incorrect password. Please try again.
+              </p>
+            )}
+
+            <button type="submit" className={`${primaryButton} w-full`}>
               Login to Dashboard
             </button>
           </form>
-          <div className="text-center space-y-3 pt-2">
-            <button 
+
+          <div className="space-y-3 pt-2 text-center">
+            <button
+              type="button"
               onClick={handleForgotPassword}
-              disabled={recoveryStatus !== 'idle'}
-              className="text-xs font-bold text-samrock-cyan hover:underline disabled:opacity-50 disabled:no-underline"
+              disabled={recovery === 'sending'}
+              className="text-xs font-bold text-brand transition hover:underline disabled:opacity-50 disabled:no-underline"
             >
-              {recoveryStatus === 'idle' && "Forgotten Password?"}
-              {recoveryStatus === 'sending' && "Sending Recent Password..."}
-              {recoveryStatus === 'success' && "Password Sent to Studio Email!"}
-              {recoveryStatus === 'error' && "Failed to Send. Check Connection."}
+              {recovery === 'idle' && 'Forgotten your password?'}
+              {recovery === 'sending' && 'Sending recovery email...'}
+              {recovery === 'sent' && 'Recovery email sent to the studio inbox'}
+              {recovery === 'error' && 'Could not send. Check your connection.'}
             </button>
-            <div className="pt-1">
-              <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-samrock-cyan transition font-medium">
-                <ArrowLeft size={14} /> Back to Portfolio Home
+            <div>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-silver transition hover:text-brand"
+              >
+                <ArrowLeft size={14} aria-hidden="true" /> Back to portfolio
               </Link>
             </div>
           </div>
@@ -235,256 +382,521 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-samrock-dark text-gray-900 dark:text-white p-4 sm:p-10 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-gray-200 dark:border-gray-800 pb-8">
+    <div className="min-h-screen px-4 py-10 sm:p-10">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <header className="flex flex-col items-center justify-between gap-6 border-b border-hairline pb-8 sm:flex-row">
           <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-samrock-card border border-gray-200 dark:border-samrock-cyan/30 flex items-center justify-center text-samrock-cyan shadow-inner">
-              <Shield size={24} />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand/30 bg-surface-2 text-brand">
+              <Shield size={24} aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Admin Dashboard</h1>
-              <p className="text-xs sm:text-sm text-samrock-cyan font-bold uppercase tracking-widest">Portfolio Manager</p>
+              <h1 className="text-2xl font-black tracking-tight text-strong sm:text-3xl">
+                Admin Dashboard
+              </h1>
+              <p className="text-xs font-bold uppercase tracking-widest text-brand">
+                Portfolio Manager
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <Link href="/" className="flex-1 sm:flex-none text-center px-6 py-2.5 rounded-xl bg-gray-50 dark:bg-samrock-card border border-gray-200 dark:border-gray-800 text-xs font-bold hover:border-samrock-cyan transition">
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            <Link href="/" className={`${ghostButton} flex-1 sm:flex-none text-xs`}>
               View Site
             </Link>
-            <button onClick={() => setIsAuthenticated(false)} className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-500/20 transition">
+            <button
+              type="button"
+              onClick={() => setIsAuthenticated(false)}
+              className={`${dangerButton} flex-1 sm:flex-none text-xs`}
+            >
               Logout
             </button>
           </div>
+        </header>
+
+        <div
+          role="tablist"
+          aria-label="Dashboard sections"
+          className="flex gap-4 overflow-x-auto border-b border-hairline pb-px sm:gap-8"
+        >
+          {TABS.map(({ id, label, Icon }) => {
+            const isActive = activeTab === id;
+            return (
+              <button
+                key={id}
+                id={`tab-${id}`}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`panel-${id}`}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-2 pb-4 text-xs font-bold transition-colors sm:text-sm ${
+                  isActive
+                    ? 'border-brand text-brand'
+                    : 'border-transparent text-silver hover:text-strong'
+                }`}
+              >
+                <Icon size={18} aria-hidden="true" /> {label}
+              </button>
+            );
+          })}
         </div>
 
-        {saved && (
-          <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400 text-xs font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
-            <CheckCircle size={18} /> Changes saved successfully!
-          </div>
-        )}
-
-        {/* Tabs - Scrollable on mobile */}
-        <div className="flex border-b border-gray-200 dark:border-gray-800 gap-4 sm:gap-8 overflow-x-auto no-scrollbar pb-px scroll-smooth">
-          <button 
-            onClick={() => setActiveTab('general')}
-            className={`flex items-center gap-2 pb-4 px-2 text-xs sm:text-sm font-bold whitespace-nowrap transition-all border-b-2 ${activeTab === 'general' ? 'border-samrock-cyan text-samrock-cyan' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            <Settings size={18} /> Profile Settings
-          </button>
-          <button 
-            onClick={() => setActiveTab('beats')}
-            className={`flex items-center gap-2 pb-4 px-2 text-xs sm:text-sm font-bold whitespace-nowrap transition-all border-b-2 ${activeTab === 'beats' ? 'border-samrock-cyan text-samrock-cyan' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            <Music size={18} /> Beat Store
-          </button>
-          <button 
-            onClick={() => setActiveTab('discography')}
-            className={`flex items-center gap-2 pb-4 px-2 text-xs sm:text-sm font-bold whitespace-nowrap transition-all border-b-2 ${activeTab === 'discography' ? 'border-samrock-cyan text-samrock-cyan' : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            <Disc size={18} /> Placements
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="mt-8 animate-in fade-in duration-500">
+        <div
+          id={`panel-${activeTab}`}
+          role="tabpanel"
+          aria-labelledby={`tab-${activeTab}`}
+          className="animate-fade-in"
+        >
           {activeTab === 'general' && (
             <div className="space-y-8">
-              <form onSubmit={handleSaveGeneral} className="bg-white dark:bg-samrock-card border border-gray-200 dark:border-gray-800 rounded-2xl p-6 sm:p-8 space-y-8 shadow-xl">
-                <h3 className="text-xl font-black border-b border-gray-100 dark:border-gray-800 pb-4">General Profile</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+              <form onSubmit={handleSaveSettings} className={`${panelClass} space-y-8`}>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline pb-4">
+                  <h2 className="text-xl font-black text-strong">General Profile</h2>
+                  <SaveState dirty={settingsDirty} />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 sm:gap-8">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Brand Name</label>
-                    <input type="text" value={siteSettings.producerName} onChange={(e) => setSiteSettings({ ...siteSettings, producerName: e.target.value })} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-samrock-cyan font-medium" />
+                    <label htmlFor="setting-brand" className={labelClass}>
+                      Brand Name
+                    </label>
+                    <input
+                      id="setting-brand"
+                      type="text"
+                      value={settings.producerName}
+                      onChange={(event) =>
+                        setSettings({ ...settings, producerName: event.target.value })
+                      }
+                      className={fieldClass}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">WhatsApp Contact</label>
-                    <input type="text" value={siteSettings.whatsappNumber} onChange={(e) => setSiteSettings({ ...siteSettings, whatsappNumber: e.target.value })} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-samrock-cyan font-medium" />
+                    <label htmlFor="setting-whatsapp" className={labelClass}>
+                      WhatsApp Contact
+                    </label>
+                    <input
+                      id="setting-whatsapp"
+                      type="tel"
+                      value={settings.whatsappNumber}
+                      onChange={(event) =>
+                        setSettings({ ...settings, whatsappNumber: event.target.value })
+                      }
+                      className={fieldClass}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Notification Email</label>
-                    <input type="email" value={siteSettings.email} onChange={(e) => setSiteSettings({ ...siteSettings, email: e.target.value })} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-samrock-cyan font-medium" />
+                    <label htmlFor="setting-email" className={labelClass}>
+                      Notification Email
+                    </label>
+                    <input
+                      id="setting-email"
+                      type="email"
+                      value={settings.email}
+                      onChange={(event) => setSettings({ ...settings, email: event.target.value })}
+                      className={fieldClass}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status Banner</label>
-                    <input type="text" value={siteSettings.statusBadge} onChange={(e) => setSiteSettings({ ...siteSettings, statusBadge: e.target.value })} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-samrock-cyan font-medium" />
+                    <label htmlFor="setting-status" className={labelClass}>
+                      Status Banner
+                    </label>
+                    <input
+                      id="setting-status"
+                      type="text"
+                      value={settings.statusBadge}
+                      onChange={(event) =>
+                        setSettings({ ...settings, statusBadge: event.target.value })
+                      }
+                      className={fieldClass}
+                    />
                   </div>
                 </div>
-                <div className="pt-4 flex justify-end">
-                  <button type="submit" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-samrock-cyan to-orange-600 text-white font-black text-sm shadow-xl shadow-samrock-cyan/20 hover:scale-[1.02] active:scale-95 transition">
-                    <Save size={18} /> Save Profile Changes
+
+                <div className="flex justify-end pt-2">
+                  <button type="submit" disabled={!settingsDirty} className={primaryButton}>
+                    <Save size={18} aria-hidden="true" /> Save Profile Changes
                   </button>
                 </div>
               </form>
 
-              <form onSubmit={handleChangePassword} className="bg-white dark:bg-samrock-card border border-gray-200 dark:border-gray-800 rounded-2xl p-6 sm:p-8 space-y-8 shadow-xl">
-                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
-                  <h3 className="text-xl font-black">Security & Access</h3>
-                  {passwordSaved && (
-                    <span className="text-xs font-bold text-green-500 flex items-center gap-1 animate-pulse">
-                      <CheckCircle size={14} /> Password Updated!
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-end">
+              <form onSubmit={handleChangePassword} className={`${panelClass} space-y-6`}>
+                <h2 className="border-b border-hairline pb-4 text-xl font-black text-strong">
+                  Security &amp; Access
+                </h2>
+                <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-2 sm:gap-8">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Update Admin Password</label>
+                    <label htmlFor="admin-new-password" className={labelClass}>
+                      New Admin Password
+                    </label>
                     <div className="relative">
-                      <input 
-                        type={showNewPassword ? "text" : "password"} 
-                        value={newPassword} 
-                        onChange={(e) => setNewPassword(e.target.value)} 
-                        placeholder="Enter new password..."
-                        className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-samrock-cyan font-medium pr-12" 
+                      <input
+                        id="admin-new-password"
+                        type={showNewPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        value={newPassword}
+                        onChange={(event) => setNewPassword(event.target.value)}
+                        placeholder="At least 6 characters..."
+                        className={`${fieldClass} pr-12`}
                       />
                       <button
                         type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-samrock-cyan transition"
+                        onClick={() => setShowNewPassword((value) => !value)}
+                        aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                        aria-pressed={showNewPassword}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-silver transition hover:text-brand"
                       >
-                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showNewPassword ? (
+                          <EyeOff size={18} aria-hidden="true" />
+                        ) : (
+                          <Eye size={18} aria-hidden="true" />
+                        )}
                       </button>
                     </div>
                   </div>
-                  <button type="submit" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gray-100 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white font-black text-sm hover:border-samrock-cyan transition">
-                    <Lock size={18} /> Update Password
+                  <button type="submit" className={ghostButton}>
+                    <Lock size={18} aria-hidden="true" /> Update Password
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 italic">Changing this will take effect immediately. Make sure to remember your new password.</p>
+                <p className="text-xs italic text-silver">
+                  Changes take effect immediately. Recovery sends the current password to the studio
+                  email address above.
+                </p>
               </form>
 
-              <div className="bg-white dark:bg-samrock-card border border-gray-200 dark:border-gray-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
-                <h3 className="text-xl font-black border-b border-gray-100 dark:border-gray-800 pb-4">Marketing Assets</h3>
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-gray-50 dark:bg-samrock-dark rounded-2xl border border-gray-200 dark:border-gray-800">
+              <section className={`${panelClass} space-y-6`}>
+                <h2 className="border-b border-hairline pb-4 text-xl font-black text-strong">
+                  Marketing Assets
+                </h2>
+                <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-hairline bg-surface-2 p-6 sm:flex-row">
                   <div className="text-center sm:text-left">
-                    <h4 className="font-bold text-gray-900 dark:text-white">Official Studio Flyer</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">High-resolution promotional material.</p>
+                    <h3 className="font-bold text-strong">Official Studio Flyer</h3>
+                    <p className="mt-1 text-xs text-silver">High-resolution promotional material.</p>
                   </div>
-                  <a href="/flyer.jpg" target="_blank" className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-samrock-card border border-gray-200 dark:border-gray-800 text-xs font-bold hover:border-samrock-cyan transition shadow-sm">
-                    <Eye size={18} /> View Asset
+                  <a
+                    href="/flyer.jpg"
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`${ghostButton} w-full text-xs sm:w-auto`}
+                  >
+                    <Eye size={18} aria-hidden="true" /> View Asset
                   </a>
                 </div>
-              </div>
+              </section>
             </div>
           )}
 
           {activeTab === 'beats' && (
             <div className="space-y-8">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h3 className="text-2xl font-black tracking-tight">Beat Store Inventory</h3>
-                <button onClick={addBeat} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-samrock-cyan text-white font-black text-sm shadow-lg shadow-samrock-cyan/20 hover:scale-[1.02] active:scale-95 transition">
-                  <Plus size={20} /> Add New Track
-                </button>
+              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <h2 className="text-2xl font-black tracking-tight text-strong">
+                  Beat Store Inventory
+                </h2>
+                <div className="flex flex-col items-center gap-3 sm:flex-row">
+                  <SaveState dirty={beatsDirty} />
+                  <button type="button" onClick={addBeat} className={`${ghostButton} w-full text-xs sm:w-auto`}>
+                    <Plus size={18} aria-hidden="true" /> Add New Track
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveBeats}
+                    disabled={!beatsDirty}
+                    className={`${primaryButton} w-full sm:w-auto`}
+                  >
+                    <Save size={18} aria-hidden="true" /> Save Inventory
+                  </button>
+                </div>
               </div>
-              
-              <div className="grid grid-cols-1 gap-6 sm:gap-8">
-                {beats.map((beat) => (
-                  <div key={beat.id} className="bg-white dark:bg-samrock-card border border-gray-200 dark:border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-8 group hover:border-samrock-cyan/50 transition duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Track Title</label>
-                        <input type="text" value={beat.title} onChange={(e) => updateBeat(beat.id, 'title', e.target.value)} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Genre</label>
-                        <select value={beat.genre} onChange={(e) => updateBeat(beat.id, 'genre', e.target.value)} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-bold">
-                          <option value="Afrobeats">Afrobeats</option>
-                          <option value="Reggae">Reggae</option>
-                          <option value="Woro">Woro</option>
-                          <option value="Trap">Trap</option>
-                          <option value="Highlife">Highlife</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Price (₦)</label>
-                        <input type="number" value={beat.price} onChange={(e) => updateBeat(beat.id, 'price', parseInt(e.target.value))} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-bold" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Audio File URL</label>
-                        <input type="text" value={beat.audioUrl} onChange={(e) => updateBeat(beat.id, 'audioUrl', e.target.value)} placeholder="Direct link to mp3..." className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cover Image URL</label>
-                        <input type="text" value={beat.coverArt} onChange={(e) => updateBeat(beat.id, 'coverArt', e.target.value)} placeholder="Link to artwork..." className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-                      <div className="flex gap-8 w-full sm:w-auto justify-center sm:justify-start">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">BPM</span>
-                          <input type="number" value={beat.bpm} onChange={(e) => updateBeat(beat.id, 'bpm', parseInt(e.target.value))} className="bg-transparent border-b border-gray-200 dark:border-gray-700 w-16 text-sm font-black focus:border-samrock-cyan outline-none text-center sm:text-left" />
+
+              {beats.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-hairline bg-surface-2 p-10 text-center text-sm text-silver">
+                  No beats yet. Add your first track to build the store.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 gap-6 sm:gap-8">
+                  {beats.map((beat) => (
+                    <div key={beat.id} className={`${panelClass} space-y-8`}>
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 sm:gap-8">
+                        <div className="space-y-2">
+                          <label htmlFor={`beat-title-${beat.id}`} className={labelClass}>
+                            Track Title
+                          </label>
+                          <input
+                            id={`beat-title-${beat.id}`}
+                            type="text"
+                            value={beat.title}
+                            onChange={(event) => updateBeat(beat.id, { title: event.target.value })}
+                            className={fieldClass}
+                          />
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Musical Key</span>
-                          <input type="text" value={beat.key} onChange={(e) => updateBeat(beat.id, 'key', e.target.value)} className="bg-transparent border-b border-gray-200 dark:border-gray-700 w-16 text-sm font-black focus:border-samrock-cyan outline-none text-center sm:text-left" />
+                        <div className="space-y-2">
+                          <label htmlFor={`beat-genre-${beat.id}`} className={labelClass}>
+                            Genre
+                          </label>
+                          <select
+                            id={`beat-genre-${beat.id}`}
+                            value={beat.genre}
+                            onChange={(event) => updateBeat(beat.id, { genre: event.target.value })}
+                            className={fieldClass}
+                          >
+                            {GENRES.map((genre) => (
+                              <option key={genre} value={genre}>
+                                {genre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor={`beat-price-${beat.id}`} className={labelClass}>
+                            Price (₦)
+                          </label>
+                          <input
+                            id={`beat-price-${beat.id}`}
+                            type="number"
+                            min={0}
+                            inputMode="numeric"
+                            value={beat.price}
+                            onChange={(event) =>
+                              updateBeat(beat.id, { price: numberFromInput(event.target.value) })
+                            }
+                            className={fieldClass}
+                          />
                         </div>
                       </div>
-                      <button onClick={() => deleteBeat(beat.id)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-black hover:bg-red-500/20 transition">
-                        <Trash2 size={16} /> Remove Track
-                      </button>
+
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 sm:gap-8">
+                        <div className="space-y-2">
+                          <label htmlFor={`beat-audio-${beat.id}`} className={labelClass}>
+                            Audio File URL
+                          </label>
+                          <input
+                            id={`beat-audio-${beat.id}`}
+                            type="url"
+                            value={beat.audioUrl ?? ''}
+                            onChange={(event) =>
+                              updateBeat(beat.id, { audioUrl: event.target.value })
+                            }
+                            placeholder="Direct link to mp3..."
+                            className={fieldClass}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor={`beat-cover-${beat.id}`} className={labelClass}>
+                            Cover Image URL
+                          </label>
+                          <input
+                            id={`beat-cover-${beat.id}`}
+                            type="url"
+                            value={beat.coverArt}
+                            onChange={(event) => updateBeat(beat.id, { coverArt: event.target.value })}
+                            placeholder="Link to artwork..."
+                            className={fieldClass}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-center justify-between gap-6 border-t border-hairline pt-6 sm:flex-row">
+                        <div className="flex w-full justify-center gap-8 sm:w-auto sm:justify-start">
+                          <div className="flex flex-col gap-1">
+                            <label
+                              htmlFor={`beat-bpm-${beat.id}`}
+                              className="text-xs font-black uppercase tracking-tight text-silver"
+                            >
+                              BPM
+                            </label>
+                            <input
+                              id={`beat-bpm-${beat.id}`}
+                              type="number"
+                              min={1}
+                              inputMode="numeric"
+                              value={beat.bpm}
+                              onChange={(event) =>
+                                updateBeat(beat.id, { bpm: numberFromInput(event.target.value) })
+                              }
+                              className="w-20 rounded-lg border border-hairline bg-surface-2 px-2 py-1.5 text-center text-sm font-black text-strong focus:border-brand focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <label
+                              htmlFor={`beat-key-${beat.id}`}
+                              className="text-xs font-black uppercase tracking-tight text-silver"
+                            >
+                              Musical Key
+                            </label>
+                            <input
+                              id={`beat-key-${beat.id}`}
+                              type="text"
+                              value={beat.key}
+                              onChange={(event) => updateBeat(beat.id, { key: event.target.value })}
+                              className="w-24 rounded-lg border border-hairline bg-surface-2 px-2 py-1.5 text-center text-sm font-black text-strong focus:border-brand focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => confirmRemoveBeat(beat.id)}
+                          className={`${dangerButton} w-full text-xs sm:w-auto`}
+                        >
+                          <Trash2 size={16} aria-hidden="true" /> Remove Track
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {activeTab === 'discography' && (
+          {activeTab === 'placements' && (
             <div className="space-y-8">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h3 className="text-2xl font-black tracking-tight">Placement Records</h3>
-                <button onClick={addPlacement} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-samrock-cyan text-white font-black text-sm shadow-lg shadow-samrock-cyan/20 hover:scale-[1.02] active:scale-95 transition">
-                  <Plus size={20} /> New Entry
-                </button>
+              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <h2 className="text-2xl font-black tracking-tight text-strong">
+                  Placement Records
+                </h2>
+                <div className="flex flex-col items-center gap-3 sm:flex-row">
+                  <SaveState dirty={placementsDirty} />
+                  <button
+                    type="button"
+                    onClick={addPlacement}
+                    className={`${ghostButton} w-full text-xs sm:w-auto`}
+                  >
+                    <Plus size={18} aria-hidden="true" /> New Entry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSavePlacements}
+                    disabled={!placementsDirty}
+                    className={`${primaryButton} w-full sm:w-auto`}
+                  >
+                    <Save size={18} aria-hidden="true" /> Save Records
+                  </button>
+                </div>
               </div>
-              
-              <div className="grid grid-cols-1 gap-6 sm:gap-8">
-                {placements.map((item) => (
-                  <div key={item.id} className="bg-white dark:bg-samrock-card border border-gray-200 dark:border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-8 group hover:border-samrock-cyan/50 transition duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Song Title</label>
-                        <input type="text" value={item.title} onChange={(e) => updatePlacement(item.id, 'title', e.target.value)} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
+
+              {placements.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-hairline bg-surface-2 p-10 text-center text-sm text-silver">
+                  No placements yet. Add your first release credit.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 gap-6 sm:gap-8">
+                  {placements.map((item) => (
+                    <div key={item.id} className={`${panelClass} space-y-8`}>
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 sm:gap-8">
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-title-${item.id}`} className={labelClass}>
+                            Song Title
+                          </label>
+                          <input
+                            id={`placement-title-${item.id}`}
+                            type="text"
+                            value={item.title}
+                            onChange={(event) =>
+                              updatePlacement(item.id, { title: event.target.value })
+                            }
+                            className={fieldClass}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-artist-${item.id}`} className={labelClass}>
+                            Artist
+                          </label>
+                          <input
+                            id={`placement-artist-${item.id}`}
+                            type="text"
+                            value={item.artist}
+                            onChange={(event) =>
+                              updatePlacement(item.id, { artist: event.target.value })
+                            }
+                            className={fieldClass}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-year-${item.id}`} className={labelClass}>
+                            Release Year
+                          </label>
+                          <input
+                            id={`placement-year-${item.id}`}
+                            type="text"
+                            value={item.year}
+                            onChange={(event) => updatePlacement(item.id, { year: event.target.value })}
+                            className={fieldClass}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Artist</label>
-                        <input type="text" value={item.artist} onChange={(e) => updatePlacement(item.id, 'artist', e.target.value)} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
+
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 sm:gap-8">
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-link-${item.id}`} className={labelClass}>
+                            Stream URL
+                          </label>
+                          <input
+                            id={`placement-link-${item.id}`}
+                            type="url"
+                            value={item.link}
+                            onChange={(event) => updatePlacement(item.id, { link: event.target.value })}
+                            placeholder="Spotify / Apple Music / Audiomack link..."
+                            className={fieldClass}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-cover-${item.id}`} className={labelClass}>
+                            Cover URL
+                          </label>
+                          <input
+                            id={`placement-cover-${item.id}`}
+                            type="url"
+                            value={item.coverArt}
+                            onChange={(event) =>
+                              updatePlacement(item.id, { coverArt: event.target.value })
+                            }
+                            placeholder="Artwork link..."
+                            className={fieldClass}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Release Year</label>
-                        <input type="text" value={item.year} onChange={(e) => updatePlacement(item.id, 'year', e.target.value)} className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-bold" />
+
+                      <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-2 sm:gap-8">
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-audio-${item.id}`} className={labelClass}>
+                            Audio File URL (Optional)
+                          </label>
+                          <input
+                            id={`placement-audio-${item.id}`}
+                            type="url"
+                            value={item.audioUrl ?? ''}
+                            onChange={(event) =>
+                              updatePlacement(item.id, { audioUrl: event.target.value })
+                            }
+                            placeholder="Direct link to mp3..."
+                            className={fieldClass}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor={`placement-role-${item.id}`} className={labelClass}>
+                            Samrock&apos;s Role
+                          </label>
+                          <input
+                            id={`placement-role-${item.id}`}
+                            type="text"
+                            value={item.role}
+                            onChange={(event) => updatePlacement(item.id, { role: event.target.value })}
+                            placeholder="e.g. Producer &amp; Mixing"
+                            className={fieldClass}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-6 border-t border-hairline pt-6 sm:flex-row sm:justify-end">
+                        <button
+                          type="button"
+                          onClick={() => confirmRemovePlacement(item.id)}
+                          className={`${dangerButton} w-full text-xs sm:w-auto`}
+                        >
+                          <Trash2 size={16} aria-hidden="true" /> Remove Entry
+                        </button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stream URL</label>
-                        <input type="text" value={item.link} onChange={(e) => updatePlacement(item.id, 'link', e.target.value)} placeholder="Spotify/YouTube link..." className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cover URL</label>
-                        <input type="text" value={item.coverArt} onChange={(e) => updatePlacement(item.id, 'coverArt', e.target.value)} placeholder="Artwork link..." className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-end">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Audio File URL (Optional)</label>
-                        <input type="text" value={item.audioUrl || ''} onChange={(e) => updatePlacement(item.id, 'audioUrl', e.target.value)} placeholder="Direct link to mp3..." className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-medium" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Samrock&apos;s Role</label>
-                        <input type="text" value={item.role} onChange={(e) => updatePlacement(item.id, 'role', e.target.value)} placeholder="e.g. Producer & Mixing" className="w-full bg-gray-50 dark:bg-samrock-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-samrock-cyan font-bold" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-end items-center gap-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-                      <button onClick={() => deletePlacement(item.id)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-black hover:bg-red-500/20 transition">
-                        <Trash2 size={16} /> Remove Entry
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

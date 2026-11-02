@@ -13,7 +13,7 @@ import AudioPlayer from '@/components/AudioPlayer';
 export default function Home() {
   return (
     <AudioProvider>
-      <main className="min-h-screen bg-white dark:bg-samrock-dark text-gray-900 dark:text-white selection:bg-samrock-cyan selection:text-white">
+      <main className="min-h-screen">
         <Navbar />
         <Hero />
         <BeatStore />

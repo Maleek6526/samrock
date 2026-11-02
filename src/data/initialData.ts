@@ -2,6 +2,8 @@ export interface Track {
   id: string;
   title: string;
   audioUrl?: string;
+  /** Public share link for a streaming service (Spotify, Apple Music, Audiomack). */
+  link?: string;
   coverArt: string;
   artist: string;
 }
