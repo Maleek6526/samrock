@@ -91,3 +91,25 @@ export function getYouTubeEmbedUrl(url?: string | null): string | null {
 
   return null;
 }
+
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.m4v'];
+
+/**
+ * True when a value is a playable video file rather than a streaming page:
+ * a device upload (`data:` / `blob:`) or a direct link ending in a video
+ * extension. Those are rendered with a native `<video>` element instead of an
+ * embed, which is how locally picked clips play without a server.
+ */
+export function getVideoFileUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const clean = url.trim();
+  if (!clean) return null;
+
+  if (clean.startsWith('data:video/') || clean.startsWith('blob:')) return clean;
+
+  const parsed = parse(clean);
+  if (!parsed) return null;
+
+  const path = parsed.pathname.toLowerCase();
+  return VIDEO_EXTENSIONS.some((extension) => path.endsWith(extension)) ? clean : null;
+}

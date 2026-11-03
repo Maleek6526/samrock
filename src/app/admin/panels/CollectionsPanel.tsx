@@ -24,7 +24,7 @@ import type {
   PortfolioSpace,
   Release,
   StudioEvent,
-  YouTubeVideo,
+  VideoItem,
 } from '@/data/initialData';
 
 const RELEASE_TYPES = ['Single', 'EP', 'Album', 'Mixtape', 'Live'] as const;
@@ -81,7 +81,7 @@ const spaceFields: FieldDef[] = [
 
 const videoFields: FieldDef[] = [
   { key: 'title', label: 'Video title', type: 'text' },
-  { key: 'url', label: 'YouTube URL', type: 'url' },
+  { key: 'url', label: 'Video link or file', type: 'video', full: true },
 ];
 
 export function ArtistsPanel() {
@@ -217,9 +217,9 @@ export function SpacesPanel() {
 
 export function VideosPanel() {
   return (
-    <CollectionPanel<YouTubeVideo>
+    <CollectionPanel<VideoItem>
       title="Video Visuals"
-      emptyLabel="No videos yet. Paste a YouTube link to feature it on the site."
+      emptyLabel="No videos yet. Paste a YouTube link, or upload a clip from your device."
       addLabel="Add video"
       fields={videoFields}
       initial={readVideos}

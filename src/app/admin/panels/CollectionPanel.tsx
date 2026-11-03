@@ -14,6 +14,7 @@ import {
   primaryButton,
 } from '@/app/admin/ui';
 import ImageField, { ImageListField } from '@/app/admin/ImageField';
+import VideoField from '@/app/admin/VideoField';
 
 export type FieldType =
   | 'text'
@@ -21,6 +22,7 @@ export type FieldType =
   | 'url'
   | 'image'
   | 'imageList'
+  | 'video'
   | 'date'
   | 'datetime'
   | 'number'
@@ -90,6 +92,18 @@ function FieldInput({
         label={field.label}
         value={Array.isArray(value) ? (value as string[]) : []}
         onChange={onChange}
+      />
+    );
+  }
+
+  if (field.type === 'video') {
+    return (
+      <VideoField
+        id={id}
+        label={field.label}
+        value={value == null ? '' : String(value)}
+        onChange={onChange}
+        placeholder={field.placeholder}
       />
     );
   }

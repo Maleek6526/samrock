@@ -20,7 +20,7 @@ import {
   type Release,
   type StudioEvent,
   type Subscriber,
-  type YouTubeVideo,
+  type VideoItem,
 } from '@/data/initialData';
 
 export const STORAGE_KEYS = {
@@ -314,7 +314,7 @@ export function usePortfolioSpaces(): PortfolioSpace[] {
   return useCollection(STORAGE_KEYS.portfolioSpaces, initialPortfolioSpaces);
 }
 
-export function useVideos(): YouTubeVideo[] {
+export function useVideos(): VideoItem[] {
   return useCollection(STORAGE_KEYS.videos, initialVideos);
 }
 
@@ -346,7 +346,7 @@ export function readPortfolioSpaces(): PortfolioSpace[] {
   return readCollection(STORAGE_KEYS.portfolioSpaces, initialPortfolioSpaces);
 }
 
-export function readVideos(): YouTubeVideo[] {
+export function readVideos(): VideoItem[] {
   return readCollection(STORAGE_KEYS.videos, initialVideos);
 }
 
@@ -378,7 +378,7 @@ export function savePortfolioSpaces(value: PortfolioSpace[]) {
   writeValue(STORAGE_KEYS.portfolioSpaces, value);
 }
 
-export function saveVideos(value: YouTubeVideo[]) {
+export function saveVideos(value: VideoItem[]) {
   writeValue(STORAGE_KEYS.videos, value);
 }
 

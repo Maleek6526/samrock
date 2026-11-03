@@ -217,8 +217,11 @@ export interface BookingRequest {
   createdAt: string;
 }
 
-/** A YouTube upload surfaced on the home page "visuals" section. */
-export interface YouTubeVideo {
+/**
+ * A video surfaced on the home page "visuals" section. `url` holds a YouTube
+ * link, a direct video link, or a data URL for a clip picked from the device.
+ */
+export interface VideoItem {
   id: string;
   title: string;
   url: string;
@@ -496,7 +499,7 @@ export const initialPortfolioSpaces: PortfolioSpace[] = [
   },
 ];
 
-export const initialVideos: YouTubeVideo[] = [];
+export const initialVideos: VideoItem[] = [];
 
 export const initialSubscribers: Subscriber[] = [];
 

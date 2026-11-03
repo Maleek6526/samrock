@@ -57,13 +57,33 @@ export default function AudioPlayer() {
     const audio = audioRef.current;
     if (!audio || embedUrl) return;
 
-    if (isPlaying) {
-      audio.play().catch(() => {
-        // Browsers may block autoplay until the user interacts.
-      });
-    } else {
+    if (!isPlaying) {
       audio.pause();
+      return;
     }
+
+    // Landing-page background music starts before the visitor interacts, which
+    // browsers usually block. When play() is rejected, the very next gesture
+    // resumes it so the track starts without an extra press.
+    const resume = () => {
+      audio.play().catch(() => {});
+    };
+
+    let cancelled = false;
+    const attempt = audio.play();
+    if (attempt && typeof attempt.catch === 'function') {
+      attempt.catch(() => {
+        if (cancelled) return;
+        window.addEventListener('pointerdown', resume, { once: true });
+        window.addEventListener('keydown', resume, { once: true });
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('pointerdown', resume);
+      window.removeEventListener('keydown', resume);
+    };
   }, [isPlaying, trackId, embedUrl]);
 
   const handleTimeUpdate = () => {

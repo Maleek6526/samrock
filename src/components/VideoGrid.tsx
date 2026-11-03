@@ -2,10 +2,14 @@
 
 import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import { getYouTubeEmbedUrl } from '@/lib/embeds';
+import { getVideoFileUrl, getYouTubeEmbedUrl } from '@/lib/embeds';
 import { useContentSettings, useVideos } from '@/lib/store';
 
-/** YouTube "visuals" grid. Falls back to an empty state until videos are added in the admin. */
+/**
+ * "Visuals" grid. Each entry is either a YouTube embed, a direct video file
+ * (including clips picked from the device), or an external link. Falls back to
+ * an empty state until videos are added in the admin.
+ */
 export default function VideoGrid() {
   const videos = useVideos();
   const { youtube } = useContentSettings();
@@ -37,6 +41,7 @@ export default function VideoGrid() {
     <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
       {videos.map((video) => {
         const embed = getYouTubeEmbedUrl(video.url);
+        const fileSource = getVideoFileUrl(video.url);
 
         return (
           <article key={video.id} className="border-t border-hairline pt-5">
@@ -49,6 +54,13 @@ export default function VideoGrid() {
                   allowFullScreen
                   loading="lazy"
                   className="absolute inset-0 h-full w-full"
+                />
+              ) : fileSource ? (
+                <video
+                  src={fileSource}
+                  controls
+                  preload="metadata"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
                 <a

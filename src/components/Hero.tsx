@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
-import { useSiteSettings } from '@/lib/store';
+import { ArrowRight, Pause, Play } from 'lucide-react';
+import { useAudio } from '@/context/AudioContext';
+import { useBeats, useReleases, useSiteSettings } from '@/lib/store';
 
 const genres = [
   'Afrobeats',
@@ -35,8 +36,12 @@ const dynamicPhrases = [
 
 export default function Hero() {
   const settings = useSiteSettings();
+  const { currentTrack, isPlaying, playTrack, togglePlay } = useAudio();
+  const releases = useReleases();
+  const beats = useBeats();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -46,6 +51,33 @@ export default function Hero() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // The latest record that can play natively becomes the landing soundtrack.
+  // Streaming-only links are skipped because they cannot run in the background.
+  const backgroundTrack = useMemo(() => {
+    const latestRelease = [...releases]
+      .filter((release) => Boolean(release.audioUrl))
+      .sort((a, b) => (b.releaseDate || '').localeCompare(a.releaseDate || ''))[0];
+    if (latestRelease) return latestRelease;
+    return beats.find((beat) => Boolean(beat.audioUrl)) ?? null;
+  }, [releases, beats]);
+
+  // Start it once on arrival, but never override a track the visitor chose.
+  useEffect(() => {
+    if (startedRef.current || !backgroundTrack || currentTrack) return;
+    startedRef.current = true;
+    playTrack(backgroundTrack, [backgroundTrack]);
+  }, [backgroundTrack, currentTrack, playTrack]);
+
+  const isBackgroundPlaying = Boolean(
+    backgroundTrack && currentTrack?.id === backgroundTrack.id && isPlaying
+  );
+
+  const handleBackgroundToggle = () => {
+    if (!backgroundTrack) return;
+    if (currentTrack?.id === backgroundTrack.id) togglePlay();
+    else playTrack(backgroundTrack, [backgroundTrack]);
+  };
 
   return (
     <section className="relative flex min-h-screen flex-col overflow-hidden bg-surface pt-28">
@@ -124,6 +156,38 @@ export default function Hero() {
                 Book a session
               </a>
             </div>
+
+            {backgroundTrack ? (
+              <button
+                type="button"
+                onClick={handleBackgroundToggle}
+                aria-label={isBackgroundPlaying ? 'Pause background music' : 'Play background music'}
+                className="mt-8 flex w-full items-center gap-3 rounded-xs border border-hairline bg-surface/70 px-4 py-3 text-left backdrop-blur-sm transition hover:border-brand animate-fade-in-up [animation-delay:360ms]"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xs border border-hairline text-brand">
+                  {isBackgroundPlaying ? (
+                    <Pause size={15} aria-hidden="true" />
+                  ) : (
+                    <Play size={15} className="ml-0.5" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="eyebrow block text-silver">
+                    {isBackgroundPlaying ? 'Now playing' : 'Background music'}
+                  </span>
+                  <span className="block truncate text-sm text-strong">
+                    {backgroundTrack.title} — {backgroundTrack.artist}
+                  </span>
+                </span>
+                {isBackgroundPlaying ? (
+                  <span aria-hidden="true" className="flex h-4 shrink-0 items-end gap-0.5">
+                    <span className="h-[50%] w-0.5 animate-pulse rounded-full bg-brand" />
+                    <span className="h-full w-0.5 animate-pulse rounded-full bg-brand [animation-delay:150ms]" />
+                    <span className="h-[40%] w-0.5 animate-pulse rounded-full bg-brand [animation-delay:300ms]" />
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
