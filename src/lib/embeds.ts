@@ -61,3 +61,33 @@ export function getEmbedUrl(url?: string | null): string | null {
 
   return `https://audiomack.com/embed${path}${parsed.search}`;
 }
+
+/**
+ * Converts a YouTube watch / share / shorts URL into an embeddable URL.
+ * Returns null when the link is not a recognisable YouTube video.
+ */
+export function getYouTubeEmbedUrl(url?: string | null): string | null {
+  const parsed = parse(url);
+  if (!parsed) return null;
+
+  const hostname = hostnameOf(parsed);
+
+  if (hostname === 'youtu.be') {
+    const id = parsed.pathname.slice(1);
+    return id ? `https://www.youtube.com/embed/${id}` : null;
+  }
+
+  if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+    if (parsed.pathname.startsWith('/embed/')) {
+      return `https://www.youtube.com${parsed.pathname}`;
+    }
+    if (parsed.pathname.startsWith('/shorts/')) {
+      const id = parsed.pathname.split('/')[2];
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+    const id = parsed.searchParams.get('v');
+    if (id) return `https://www.youtube.com/embed/${id}`;
+  }
+
+  return null;
+}

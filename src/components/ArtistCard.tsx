@@ -1,0 +1,43 @@
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import type { Artist } from '@/data/initialData';
+
+/** Roster card. Links to the artist profile panel on /artists via query param. */
+export default function ArtistCard({ artist, href }: { artist: Artist; href?: string }) {
+  const link = href ?? `/artists?artist=${encodeURIComponent(artist.name)}`;
+
+  return (
+    <article className="group border-t border-hairline pt-5">
+      <div className="media-tone relative aspect-4/5 overflow-hidden rounded-xs border border-hairline bg-surface-2">
+        {artist.photo ? (
+          <Image
+            src={artist.photo}
+            alt={artist.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-silver">
+            <span className="font-display text-display">{artist.name.charAt(0)}</span>
+          </div>
+        )}
+      </div>
+
+      <p className="eyebrow mt-6 text-brand">{artist.genre}</p>
+      <h3 className="mt-3 font-display text-title text-strong">{artist.name}</h3>
+      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-silver">{artist.bio}</p>
+
+      <Link
+        href={link}
+        className="link-underline eyebrow mt-5 inline-flex items-center gap-2 text-brand"
+      >
+        View profile <ArrowRight size={12} aria-hidden="true" />
+      </Link>
+    </article>
+  );
+}

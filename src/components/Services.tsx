@@ -1,40 +1,9 @@
 'use client';
 
 import React from 'react';
-import { ArrowRight, Disc3, Mic2, Radio, Sliders } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import SectionHeading from '@/components/ui/SectionHeading';
-import type { ServiceDefinition } from '@/lib/site';
-
-const services: ServiceDefinition[] = [
-  {
-    title: 'Beat Making & Production',
-    description:
-      'Custom instrumentals tailored for Afrobeats, Reggae, Woro, and Trap. Built with industry-standard VSTs and hardware.',
-    icon: Disc3,
-    features: ['Exclusive & Leased Beats', 'Full Track Arrangement', 'Custom Tempo & Key'],
-  },
-  {
-    title: 'Mixing & Mastering',
-    description:
-      'Professional vocal tuning, EQ, compression, stereo widening, and loudness optimization to make your record radio-ready.',
-    icon: Sliders,
-    features: ['Vocal Pitch Correction', 'Dynamic Balancing', 'Industry Standard Loudness'],
-  },
-  {
-    title: 'Music Recording & Engineering',
-    description:
-      'Crystal-clear vocal tracking in a professionally treated acoustic environment using premium studio microphones.',
-    icon: Mic2,
-    features: ['Acoustic Studio Session', 'Professional Monitoring', 'Vocal Production Coaching'],
-  },
-  {
-    title: 'Jingles & Back Tracks',
-    description:
-      'Catchy commercial jingles, voiceover backing, and custom audio backtracks for brands, radio, and social media campaigns.',
-    icon: Radio,
-    features: ['Commercial Rights', 'Fast Turnaround', 'Tailored Brand Messaging'],
-  },
-];
+import { serviceDefinitions } from '@/lib/site';
 
 export default function Services() {
   return (
@@ -52,7 +21,7 @@ export default function Services() {
         />
 
         <ol className="mt-12 border-t border-hairline">
-          {services.map((service, index) => {
+          {serviceDefinitions.map((service, index) => {
             const Icon = service.icon;
 
             return (
@@ -70,7 +39,7 @@ export default function Services() {
                       <h3 className="font-display text-title text-strong">{service.title}</h3>
                     </div>
                     <a
-                      href="#contact"
+                      href={'/booking?line=' + encodeURIComponent(service.title)}
                       className="link-underline eyebrow mt-5 inline-flex items-center gap-2 text-brand"
                     >
                       Book this service

@@ -4,16 +4,8 @@ import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Shield, Sun, Moon } from 'lucide-react';
-import { brandMark } from '@/lib/site';
+import { brandMark, navLinks } from '@/lib/site';
 import { applyTheme, useSiteSettings, useTheme } from '@/lib/store';
-
-const navLinks = [
-  { name: 'Beats', href: '#beats' },
-  { name: 'Discography', href: '#discography' },
-  { name: 'Services', href: '#services' },
-  { name: 'About & Gear', href: '#about' },
-  { name: 'Contact', href: '#contact' },
-];
 
 const iconButton =
   'rounded-xs border border-hairline p-2.5 text-strong transition hover:border-brand hover:text-brand';
@@ -52,15 +44,15 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden items-center gap-9 md:flex">
+          <div className="hidden items-center gap-7 md:flex">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 className="eyebrow link-underline text-silver transition hover:text-strong"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -81,7 +73,7 @@ export default function Navbar() {
               Admin
             </Link>
 
-            <a href="#contact" className="btn btn-primary px-5 py-3">
+            <a href="/booking" className="btn btn-primary px-5 py-3">
               Book Session
             </a>
           </div>
@@ -113,23 +105,27 @@ export default function Navbar() {
       {isOpen && (
         <div id="mobile-nav" className="border-b border-hairline bg-surface px-6 pb-8 pt-2 md:hidden">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.name}
               href={link.href}
               onClick={() => setIsOpen(false)}
               className="eyebrow block border-b border-hairline py-4 text-silver transition hover:text-strong"
             >
               {link.name}
-            </a>
+            </Link>
           ))}
           <div className="flex flex-col gap-3 pt-6">
             <Link href="/admin" onClick={() => setIsOpen(false)} className={`${compactGhost} w-full`}>
               <Shield size={14} aria-hidden="true" />
               Admin Dashboard
             </Link>
-            <a href="#contact" onClick={() => setIsOpen(false)} className="btn btn-primary w-full">
+            <Link
+              href="/booking"
+              onClick={() => setIsOpen(false)}
+              className="btn btn-primary w-full"
+            >
               Book Session
-            </a>
+            </Link>
           </div>
         </div>
       )}

@@ -4,17 +4,27 @@ import React, { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
+  CalendarCheck,
+  CalendarDays,
   CheckCircle,
+  Database,
   Disc,
+  Disc3,
   Eye,
   EyeOff,
+  FileText,
+  LayoutGrid,
   Lock,
+  Mail,
   Music,
+  Newspaper,
   Plus,
   Save,
   Settings,
   Shield,
   Trash2,
+  Users,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Beat, Placement } from '@/data/initialData';
@@ -28,8 +38,22 @@ import {
   saveBeats,
   savePlacements,
   saveSiteSettings,
+  useSiteSettings,
   writeString,
 } from '@/lib/store';
+import ContentPanel from '@/app/admin/panels/ContentPanel';
+import ImageField from '@/app/admin/ImageField';
+import {
+  AnnouncementsPanel,
+  ArtistsPanel,
+  EventsPanel,
+  ReleasesPanel,
+  SpacesPanel,
+  VideosPanel,
+} from '@/app/admin/panels/CollectionsPanel';
+import SubscribersPanel from '@/app/admin/panels/SubscribersPanel';
+import BookingsPanel from '@/app/admin/panels/BookingsPanel';
+import DataPanel from '@/app/admin/panels/DataPanel';
 
 /** Prototype-only default. The live value is persisted in localStorage. */
 const DEFAULT_ADMIN_PASSWORD = 'samrock123';
@@ -38,8 +62,18 @@ const GENRES = ['Afrobeats', 'Reggae', 'Woro', 'Trap', 'Highlife'] as const;
 
 const TABS = [
   { id: 'general', label: 'Profile Settings', Icon: Settings },
+  { id: 'content', label: 'Site Content', Icon: FileText },
   { id: 'beats', label: 'Beat Store', Icon: Music },
   { id: 'placements', label: 'Placements', Icon: Disc },
+  { id: 'artists', label: 'Artists', Icon: Users },
+  { id: 'releases', label: 'Releases', Icon: Disc3 },
+  { id: 'events', label: 'Events', Icon: CalendarDays },
+  { id: 'announcements', label: 'Announcements', Icon: Newspaper },
+  { id: 'portfolio', label: 'Portfolio', Icon: LayoutGrid },
+  { id: 'videos', label: 'Videos', Icon: Video },
+  { id: 'subscribers', label: 'Subscribers', Icon: Mail },
+  { id: 'bookings', label: 'Bookings', Icon: CalendarCheck },
+  { id: 'data', label: 'Data & Exports', Icon: Database },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -114,6 +148,10 @@ export default function AdminPage() {
 }
 
 function AdminDashboard() {
+  // Mounting this hook binds the store's cross-tab listener, so one-shot readers
+  // (used by the export panel) always see the latest saved values.
+  useSiteSettings();
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [storedPassword, setStoredPassword] = useState(() =>
@@ -669,19 +707,12 @@ function AdminDashboard() {
                             className={fieldClass}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label htmlFor={`beat-cover-${beat.id}`} className={labelClass}>
-                            Cover Image URL
-                          </label>
-                          <input
-                            id={`beat-cover-${beat.id}`}
-                            type="url"
-                            value={beat.coverArt}
-                            onChange={(event) => updateBeat(beat.id, { coverArt: event.target.value })}
-                            placeholder="Link to artwork..."
-                            className={fieldClass}
-                          />
-                        </div>
+                        <ImageField
+                          id={`beat-cover-${beat.id}`}
+                          label="Cover image"
+                          value={beat.coverArt}
+                          onChange={(value) => updateBeat(beat.id, { coverArt: value })}
+                        />
                       </div>
 
                       <div className="flex flex-col items-center justify-between gap-6 border-t border-hairline pt-6 sm:flex-row">
@@ -827,21 +858,12 @@ function AdminDashboard() {
                             className={fieldClass}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label htmlFor={`placement-cover-${item.id}`} className={labelClass}>
-                            Cover URL
-                          </label>
-                          <input
-                            id={`placement-cover-${item.id}`}
-                            type="url"
-                            value={item.coverArt}
-                            onChange={(event) =>
-                              updatePlacement(item.id, { coverArt: event.target.value })
-                            }
-                            placeholder="Artwork link..."
-                            className={fieldClass}
-                          />
-                        </div>
+                        <ImageField
+                          id={`placement-cover-${item.id}`}
+                          label="Cover image"
+                          value={item.coverArt}
+                          onChange={(value) => updatePlacement(item.id, { coverArt: value })}
+                        />
                       </div>
 
                       <div className="grid grid-cols-1 items-end gap-6 md:grid-cols-2 sm:gap-8">
@@ -890,6 +912,17 @@ function AdminDashboard() {
               )}
             </div>
           )}
+
+          {activeTab === 'content' && <ContentPanel />}
+          {activeTab === 'artists' && <ArtistsPanel />}
+          {activeTab === 'releases' && <ReleasesPanel />}
+          {activeTab === 'events' && <EventsPanel />}
+          {activeTab === 'announcements' && <AnnouncementsPanel />}
+          {activeTab === 'portfolio' && <SpacesPanel />}
+          {activeTab === 'videos' && <VideosPanel />}
+          {activeTab === 'subscribers' && <SubscribersPanel />}
+          {activeTab === 'bookings' && <BookingsPanel />}
+          {activeTab === 'data' && <DataPanel />}
         </div>
       </div>
     </div>

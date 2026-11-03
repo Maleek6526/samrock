@@ -4,8 +4,9 @@ import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, MessageSquare, Music, Shield } from 'lucide-react';
-import { brandMark, contactInfo, socialLinks } from '@/lib/site';
+import { brandMark, contactInfo, footerLinks, socialLinks } from '@/lib/site';
 import { useSiteSettings } from '@/lib/store';
+import NewsletterForm from '@/components/NewsletterForm';
 
 // lucide-react v1.x removed brand logos, so the missing ones are inline SVGs.
 type BrandIconProps = { size?: number };
@@ -36,14 +37,6 @@ const socialIcons: Record<string, React.ReactNode> = {
   Audiomack: <Music size={18} />,
   TikTok: <span className="text-[10px] font-bold">TikTok</span>,
 };
-
-const footerLinks = [
-  { label: 'Beat Store', href: '#beats' },
-  { label: 'Discography', href: '#discography' },
-  { label: 'Services', href: '#services' },
-  { label: 'About & Gear', href: '#about' },
-  { label: 'Book Session', href: '#contact' },
-];
 
 const emptySubscribe = () => () => {};
 
@@ -114,9 +107,12 @@ export default function Footer() {
           <ul className="space-y-3 text-sm">
             {footerLinks.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="link-underline text-silver transition hover:text-strong">
+                <Link
+                  href={link.href}
+                  className="link-underline text-silver transition hover:text-strong"
+                >
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -145,14 +141,34 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto mt-14 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-xs text-silver sm:flex-row">
-        <p>© {copyrightYear} Samrock Music Productions. All rights reserved.</p>
-        <p className="flex items-center gap-1.5">
-          Designed &amp; engineered with
-          <Heart size={12} className="fill-brand text-brand" aria-hidden="true" />
-          for the culture
-        </p>
+      <div className="mx-auto mt-14 grid max-w-7xl gap-6 border-t border-hairline pt-10 md:grid-cols-12 md:items-center md:gap-10">
+        <div className="md:col-span-5">
+          <h2 className="eyebrow text-strong">Join the mailing list</h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-silver">
+            New releases, beat drops and studio news, sent straight to your inbox.
+          </p>
+        </div>
+        <div className="md:col-span-7">
+          <NewsletterForm />
+        </div>
       </div>
+
+        <div className="mx-auto mt-14 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-xs text-silver sm:flex-row">
+        <p>© {copyrightYear} Samrock Music Productions. All rights reserved.</p>
+
+        <p className="flex items-center gap-2">
+          Designed &amp; engineered by Engineer Maleek
+
+          <a
+            href="https://maleek-adewale.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-md border border-hairline px-3 py-1.5 text-white transition-colors duration-300 hover:bg-white hover:text-black"
+          >
+            Portfolio ↗
+          </a>
+        </p>
+        </div>
     </footer>
   );
 }
