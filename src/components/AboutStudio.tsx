@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Cpu, Eye, Headphones, ShieldCheck, Sliders, X } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import SectionHeading from '@/components/ui/SectionHeading';
+import { useContentSettings } from '@/lib/store';
 
 const rigItems = [
   { title: 'Universal Audio Apollo x8p', icon: Cpu },
@@ -15,12 +16,14 @@ const rigItems = [
 
 export default function AboutStudio() {
   const [showFlyer, setShowFlyer] = useState(false);
+  const { imagery } = useContentSettings();
+  const gallery = imagery.studioGallery;
 
   return (
     <section id="about" className="relative border-t border-hairline bg-surface-3 px-6 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          index="04"
+          index="05"
           eyebrow="The studio"
           title={
             <>
@@ -76,6 +79,33 @@ export default function AboutStudio() {
             </ul>
           </div>
         </div>
+
+        {gallery.length > 0 ? (
+          <div className="mt-16 border-t border-hairline pt-8">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="eyebrow text-silver">Our rooms</span>
+              <span className="eyebrow text-brand">
+                {gallery.length} {gallery.length === 1 ? 'photo' : 'photos'}
+              </span>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {gallery.map((src, index) => (
+                <div
+                  key={`${src.slice(0, 40)}-${index}`}
+                  className="media-tone relative aspect-square overflow-hidden border border-hairline bg-surface-2"
+                >
+                  <Image
+                    src={src}
+                    alt="Samrock studio"
+                    fill
+                    sizes="(min-width: 640px) 33vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <Modal

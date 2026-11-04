@@ -12,7 +12,7 @@ import {
   panelClass,
   primaryButton,
 } from '@/app/admin/ui';
-import ImageField from '@/app/admin/ImageField';
+import ImageField, { ImageListField } from '@/app/admin/ImageField';
 import { type ContentSettings } from '@/lib/site';
 import { readContentSettings, saveContentSettings } from '@/lib/store';
 
@@ -132,6 +132,8 @@ export default function ContentPanel() {
     setContent((current) => ({ ...current, founder: { ...current.founder, ...patch } }));
   const updateContact = (patch: Partial<ContentSettings['contact']>) =>
     setContent((current) => ({ ...current, contact: { ...current.contact, ...patch } }));
+  const updateImagery = (patch: Partial<ContentSettings['imagery']>) =>
+    setContent((current) => ({ ...current, imagery: { ...current.imagery, ...patch } }));
 
   const handleSave = () => {
     saveContentSettings(content);
@@ -231,6 +233,29 @@ export default function ContentPanel() {
           onChange={(items) =>
             updateAbout({ stats: items as unknown as ContentSettings['about']['stats'] })
           }
+        />
+      </section>
+
+      {/* Studio imagery */}
+      <section className={`${panelClass} space-y-6`}>
+        <h3 className="border-b border-hairline pb-4 font-display text-xl text-strong">
+          Studio Imagery
+        </h3>
+
+        <ImageListField
+          id="hero-images"
+          label="Home hero slideshow"
+          value={content.imagery.heroImages}
+          onChange={(value) => updateImagery({ heroImages: value })}
+          hint="Paste image links or upload files. These rotate behind the home headline."
+        />
+
+        <ImageListField
+          id="studio-gallery"
+          label="Studio gallery"
+          value={content.imagery.studioGallery}
+          onChange={(value) => updateImagery({ studioGallery: value })}
+          hint="Shown in the 'Inside Samrock' section. Leave empty to hide the gallery."
         />
       </section>
 

@@ -191,6 +191,11 @@ export interface ContentSettings {
     mapUrl: string;
     businessHours: { day: string; hours: string }[];
   };
+  /** Studio imagery managed from the admin: the home slideshow and the gallery. */
+  imagery: {
+    heroImages: string[];
+    studioGallery: string[];
+  };
   streamingPlatforms: { label: string; href: string }[];
   pressResources: { title: string; description: string; subject: string }[];
   youtube: { channelUrl: string };
@@ -267,6 +272,10 @@ export const defaultContentSettings: ContentSettings = {
       { day: 'Saturday', hours: '10:00 AM - 4:00 PM' },
       { day: 'Sunday', hours: 'Closed' },
     ],
+  },
+  imagery: {
+    heroImages: ['/hero1.jpg', '/hero2.jpg', '/hero3.jpg', '/hero4.jpg', '/hero5.jpg'],
+    studioGallery: [],
   },
   streamingPlatforms: [
     { label: 'Spotify', href: 'https://open.spotify.com/artist/1oexpD5GaB60odDIN76czV' },

@@ -2,6 +2,7 @@ import React from 'react';
 import { AudioProvider } from '@/context/AudioContext';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
+import LabelSpotlight from '@/components/LabelSpotlight';
 import BeatStore from '@/components/BeatStore';
 import Discography from '@/components/Discography';
 import Services from '@/components/Services';
@@ -16,6 +17,7 @@ export default function Home() {
       <main className="min-h-screen">
         <Navbar />
         <Hero />
+        <LabelSpotlight />
         <BeatStore />
         <Discography />
         <Services />

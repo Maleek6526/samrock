@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ArrowRight, Pause, Play } from 'lucide-react';
 import { useAudio } from '@/context/AudioContext';
-import { useBeats, useReleases, useSiteSettings } from '@/lib/store';
+import { useBeats, useContentSettings, useReleases, useSiteSettings } from '@/lib/store';
 
 const genres = [
   'Afrobeats',
@@ -36,6 +36,7 @@ const dynamicPhrases = [
 
 export default function Hero() {
   const settings = useSiteSettings();
+  const { imagery } = useContentSettings();
   const { currentTrack, isPlaying, playTrack, togglePlay } = useAudio();
   const releases = useReleases();
   const beats = useBeats();
@@ -43,14 +44,18 @@ export default function Hero() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const startedRef = useRef(false);
 
+  // The admin can swap the studio shots that rotate behind the headline.
+  const heroSlides = imagery.heroImages.length > 0 ? imagery.heroImages : backgroundImages;
+
   useEffect(() => {
+    const count = heroSlides.length || 1;
     const timer = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
+      setCurrentImageIndex((prev) => (prev + 1) % count);
       setCurrentPhraseIndex((prev) => (prev + 1) % dynamicPhrases.length);
     }, 2000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   // The latest record that can play natively becomes the landing soundtrack.
   // Streaming-only links are skipped because they cannot run in the background.
@@ -83,11 +88,11 @@ export default function Hero() {
     <section className="relative flex min-h-screen flex-col overflow-hidden bg-surface pt-28">
       {/* Background Slideshow */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        {backgroundImages.map((src, index) => (
+        {heroSlides.map((src, index) => (
           <div
-            key={src}
+            key={`${src.slice(0, 40)}-${index}`}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+              index === currentImageIndex % heroSlides.length ? 'opacity-100' : 'opacity-0'
             }`}
           >
             <Image
