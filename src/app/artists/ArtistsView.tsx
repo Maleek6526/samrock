@@ -103,12 +103,22 @@ export default function ArtistsView() {
               <div className="lg:col-span-8">
                 <div className="flex items-baseline gap-4">
                   <span className="eyebrow text-brand">Artist profile</span>
-                  <span className="eyebrow text-silver">{selectedArtist.location}</span>
+                  {selectedArtist.location ? (
+                    <span className="eyebrow text-silver">{selectedArtist.location}</span>
+                  ) : null}
                 </div>
 
-                <p className="eyebrow mt-6 text-brand">{selectedArtist.genre}</p>
-                <h2 className="mt-3 font-display text-display text-strong">{selectedArtist.name}</h2>
-                <p className="mt-4 max-w-2xl text-lede text-silver">{selectedArtist.bio}</p>
+                <div className="mt-6">
+                  {selectedArtist.genre ? (
+                    <p className="eyebrow text-brand">{selectedArtist.genre}</p>
+                  ) : null}
+                  <h2 className="mt-3 font-display text-display text-strong">
+                    {selectedArtist.name}
+                  </h2>
+                  {selectedArtist.bio ? (
+                    <p className="mt-4 max-w-2xl text-lede text-silver">{selectedArtist.bio}</p>
+                  ) : null}
+                </div>
 
                 {selectedArtist.highlights.length > 0 ? (
                   <div className="mt-8">
@@ -196,11 +206,7 @@ export default function ArtistsView() {
 
             <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
               {legacyRoster.map((artist) => (
-                <ArtistCard
-                  key={artist.id}
-                  artist={artist}
-                  href={`/booking?artist=${encodeURIComponent(artist.name)}`}
-                />
+                <ArtistCard key={artist.id} artist={artist} />
               ))}
             </div>
           </section>

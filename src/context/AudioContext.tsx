@@ -95,3 +95,9 @@ export const useAudio = () => {
   if (!context) throw new Error('useAudio must be used within an AudioProvider');
   return context;
 };
+
+/**
+ * Reads the audio context without requiring a provider. Used by global
+ * overlays that mount on every route, including pages with no player.
+ */
+export const useAudioSafe = () => useContext(AudioContext) ?? null;

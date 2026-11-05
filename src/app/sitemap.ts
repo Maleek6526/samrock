@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { initialAnnouncements, initialEvents, initialReleases } from '@/data/initialData';
+import { initialAnnouncements, initialArtists, initialEvents, initialReleases } from '@/data/initialData';
+import { slugify } from '@/lib/site';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://samrock-music-production.vercel.app';
 
@@ -14,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/events`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${siteUrl}/portfolio`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${siteUrl}/announcements`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${siteUrl}/demo`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${siteUrl}/booking`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${siteUrl}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${siteUrl}/founder`, changeFrequency: 'monthly', priority: 0.6 },
@@ -25,6 +27,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const releaseRoutes: MetadataRoute.Sitemap = initialReleases.map((release) => ({
     url: `${siteUrl}/releases/${release.slug}`,
     lastModified: release.releaseDate ? new Date(release.releaseDate) : lastModified,
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
+  const artistRoutes: MetadataRoute.Sitemap = initialArtists.map((artist) => ({
+    url: `${siteUrl}/artists/${slugify(artist.name)}`,
     changeFrequency: 'monthly',
     priority: 0.6,
   }));
@@ -46,6 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...staticRoutes.map((route) => ({ lastModified, ...route })),
     ...releaseRoutes,
+    ...artistRoutes,
     ...eventRoutes,
     ...announcementRoutes,
   ];

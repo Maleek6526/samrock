@@ -11,6 +11,7 @@ import {
   readArtists,
   readBeats,
   readBookings,
+  readDemos,
   readPlacements,
   readPortfolioSpaces,
   readReleases,
@@ -31,6 +32,7 @@ const collections: { label: string; read: () => { id: string }[] }[] = [
   { label: 'Videos', read: readVideos },
   { label: 'Subscribers', read: readSubscribers },
   { label: 'Bookings', read: readBookings },
+  { label: 'Demos', read: readDemos },
 ];
 
 /** Backup and reporting exports for every collection in the portfolio. */

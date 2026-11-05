@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowRight, Music } from 'lucide-react';
 import SectionHeading from '@/components/ui/SectionHeading';
 import { useArtists, useReleases } from '@/lib/store';
-import { formatDate } from '@/lib/site';
+import { formatDate, slugify } from '@/lib/site';
 
 const MAX_RELEASES = 4;
 const MAX_ROSTER = 6;
@@ -30,7 +30,7 @@ export default function LabelSpotlight() {
     <section id="label" className="relative border-t border-hairline bg-surface-3 px-6 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          index="01"
+          index="02"
           eyebrow="The label"
           title={
             <>
@@ -102,7 +102,7 @@ export default function LabelSpotlight() {
               {roster.map((artist) => (
                 <li key={artist.id} className="border-b border-hairline">
                   <Link
-                    href={`/artists?artist=${encodeURIComponent(artist.name)}`}
+                    href={`/artists/${slugify(artist.name)}`}
                     className="group flex flex-col gap-1 py-5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
                   >
                     <span className="font-display text-title text-strong transition group-hover:text-brand">
@@ -115,6 +115,23 @@ export default function LabelSpotlight() {
             </ul>
           </div>
         ) : null}
+
+        <div className="mt-16 flex flex-col items-start justify-between gap-6 border-t border-hairline pt-8 sm:flex-row sm:items-center">
+          <div>
+            <span className="eyebrow text-brand">A&amp;R</span>
+            <p className="mt-3 max-w-xl font-display text-title text-strong">
+              Are you an artiste? Send your demo to the label.
+            </p>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-silver">
+              Samrock is always listening. Share your records with the A&amp;R desk and we will take
+              it from there.
+            </p>
+          </div>
+          <Link href="/demo" className="btn btn-primary shrink-0">
+            Submit a demo
+            <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     </section>
   );

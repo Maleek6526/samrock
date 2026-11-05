@@ -3,7 +3,7 @@
 import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, MessageSquare, Music, Shield } from 'lucide-react';
+import { MessageSquare, Music, Shield } from 'lucide-react';
 import { brandMark, contactInfo, footerLinks, socialLinks } from '@/lib/site';
 import { useSiteSettings } from '@/lib/store';
 import NewsletterForm from '@/components/NewsletterForm';

@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   Lock,
   Mail,
+  Mic2,
   Music,
   Newspaper,
   Plus,
@@ -53,6 +54,7 @@ import {
 } from '@/app/admin/panels/CollectionsPanel';
 import SubscribersPanel from '@/app/admin/panels/SubscribersPanel';
 import BookingsPanel from '@/app/admin/panels/BookingsPanel';
+import DemosPanel from '@/app/admin/panels/DemosPanel';
 import DataPanel from '@/app/admin/panels/DataPanel';
 
 /** Prototype-only default. The live value is persisted in localStorage. */
@@ -73,6 +75,7 @@ const TABS = [
   { id: 'videos', label: 'Videos', Icon: Video },
   { id: 'subscribers', label: 'Subscribers', Icon: Mail },
   { id: 'bookings', label: 'Bookings', Icon: CalendarCheck },
+  { id: 'demos', label: 'Demos', Icon: Mic2 },
   { id: 'data', label: 'Data & Exports', Icon: Database },
 ] as const;
 
@@ -922,6 +925,7 @@ function AdminDashboard() {
           {activeTab === 'videos' && <VideosPanel />}
           {activeTab === 'subscribers' && <SubscribersPanel />}
           {activeTab === 'bookings' && <BookingsPanel />}
+          {activeTab === 'demos' && <DemosPanel />}
           {activeTab === 'data' && <DataPanel />}
         </div>
       </div>

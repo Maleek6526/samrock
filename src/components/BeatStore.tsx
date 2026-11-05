@@ -41,7 +41,7 @@ export default function BeatStore() {
     <section id="beats" className="relative bg-surface px-6 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          index="02"
+          index="03"
           eyebrow="Catalog"
           title={
             <>

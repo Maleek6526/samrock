@@ -30,7 +30,7 @@ export default function Discography() {
     <section id="discography" className="relative border-t border-hairline bg-surface-3 px-6 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          index="03"
+          index="04"
           eyebrow="Credits &amp; Releases"
           title={
             <>

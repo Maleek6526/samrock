@@ -172,6 +172,24 @@ export default function ContentPanel() {
           />
         </div>
 
+        <div className="space-y-2">
+          <label className={labelClass}>Label story title</label>
+          <input
+            type="text"
+            value={content.about.labelStory.title}
+            onChange={(event) =>
+              updateAbout({ labelStory: { ...content.about.labelStory, title: event.target.value } })
+            }
+            className={fieldClass}
+          />
+        </div>
+
+        <StringListEditor
+          label="Label story paragraphs (one per line)"
+          items={content.about.labelStory.body}
+          onChange={(items) => updateAbout({ labelStory: { ...content.about.labelStory, body: items } })}
+        />
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 sm:gap-8">
           <div className="space-y-2">
             <label className={labelClass}>Vision title</label>

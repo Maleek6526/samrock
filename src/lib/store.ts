@@ -5,6 +5,7 @@ import {
   initialArtists,
   initialBeats,
   initialBookings,
+  initialDemos,
   initialEvents,
   initialPlacements,
   initialPortfolioSpaces,
@@ -15,6 +16,7 @@ import {
   type Artist,
   type Beat,
   type BookingRequest,
+  type DemoRequest,
   type Placement,
   type PortfolioSpace,
   type Release,
@@ -36,6 +38,7 @@ export const STORAGE_KEYS = {
   videos: 'videos',
   subscribers: 'subscribers',
   bookings: 'bookings',
+  demos: 'demos',
   password: 'adminPassword',
   theme: 'theme',
 } as const;
@@ -105,8 +108,16 @@ function readRaw(key: string): string | null {
   }
 }
 
-/** Merges stored values over the defaults so older records keep working. */
-function readObjectSnapshot<T extends object>(key: string, fallback: T): T {
+/**
+ * Merges stored values over the defaults so older records keep working.
+ * `normalise` runs once before caching, letting a nested section re-apply the
+ * defaults it was saved without — a stored object replaces a default wholesale.
+ */
+function readObjectSnapshot<T extends object>(
+  key: string,
+  fallback: T,
+  normalise?: (value: T) => T
+): T {
   const cached = snapshots.get(key);
   if (cached) return cached as T;
 
@@ -118,6 +129,7 @@ function readObjectSnapshot<T extends object>(key: string, fallback: T): T {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       value = { ...fallback, ...(parsed as Partial<T>) };
+      if (normalise) value = normalise(value);
     }
   } catch {
     value = fallback;
@@ -262,16 +274,32 @@ export function savePlacements(placements: Placement[]) {
 /*  Editable long-form content                                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Backfills nested content sections that predate keys added later (for example
+ * `about.labelStory`), so a browser holding older saved content never reads a
+ * missing section.
+ */
+function normaliseContentSettings(value: ContentSettings): ContentSettings {
+  return {
+    ...value,
+    about: { ...defaultContentSettings.about, ...value.about },
+    founder: { ...defaultContentSettings.founder, ...value.founder },
+    contact: { ...defaultContentSettings.contact, ...value.contact },
+    imagery: { ...defaultContentSettings.imagery, ...value.imagery },
+    youtube: { ...defaultContentSettings.youtube, ...value.youtube },
+  };
+}
+
 export function useContentSettings(): ContentSettings {
   return useSyncExternalStore(
     subscribe,
-    () => readObjectSnapshot(STORAGE_KEYS.content, defaultContentSettings),
+    () => readObjectSnapshot(STORAGE_KEYS.content, defaultContentSettings, normaliseContentSettings),
     () => defaultContentSettings
   );
 }
 
 export function readContentSettings(): ContentSettings {
-  return readObjectSnapshot(STORAGE_KEYS.content, defaultContentSettings);
+  return readObjectSnapshot(STORAGE_KEYS.content, defaultContentSettings, normaliseContentSettings);
 }
 
 export function saveContentSettings(content: ContentSettings) {
@@ -326,6 +354,10 @@ export function useBookings(): BookingRequest[] {
   return useCollection(STORAGE_KEYS.bookings, initialBookings);
 }
 
+export function useDemos(): DemoRequest[] {
+  return useCollection(STORAGE_KEYS.demos, initialDemos);
+}
+
 export function readArtists(): Artist[] {
   return readCollection(STORAGE_KEYS.artists, initialArtists);
 }
@@ -356,6 +388,10 @@ export function readSubscribers(): Subscriber[] {
 
 export function readBookings(): BookingRequest[] {
   return readCollection(STORAGE_KEYS.bookings, initialBookings);
+}
+
+export function readDemos(): DemoRequest[] {
+  return readCollection(STORAGE_KEYS.demos, initialDemos);
 }
 
 export function saveArtists(value: Artist[]) {
@@ -390,6 +426,10 @@ export function saveBookings(value: BookingRequest[]) {
   writeValue(STORAGE_KEYS.bookings, value);
 }
 
+export function saveDemos(value: DemoRequest[]) {
+  writeValue(STORAGE_KEYS.demos, value);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Record helpers                                                            */
 /* -------------------------------------------------------------------------- */
@@ -421,6 +461,13 @@ export function addBooking(request: Omit<BookingRequest, 'id' | 'createdAt'>): B
   return entry;
 }
 
+/** Records a demo submission from the public A&R page. */
+export function addDemo(request: Omit<DemoRequest, 'id' | 'createdAt'>): DemoRequest {
+  const entry: DemoRequest = { ...request, id: createId('dm'), createdAt: new Date().toISOString() };
+  writeValue(STORAGE_KEYS.demos, [entry, ...readDemos()]);
+  return entry;
+}
+
 /** Builds a downloadable JSON snapshot of every stored collection. */
 export function buildExportPayload() {
   return {
@@ -437,6 +484,7 @@ export function buildExportPayload() {
     videos: readVideos(),
     subscribers: readSubscribers(),
     bookings: readBookings(),
+    demos: readDemos(),
   };
 }
 

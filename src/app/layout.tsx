@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
+import SamrockAssistant from '@/components/SamrockAssistant';
 import { contactInfo, defaultSiteSettings, socialLinks } from '@/lib/site';
 
 const inter = Inter({
@@ -120,6 +121,7 @@ export default function RootLayout({
         className={`${inter.variable} ${instrumentSerif.variable} font-sans antialiased`}
       >
         {children}
+        <SamrockAssistant />
         <Toaster position="top-center" richColors theme="dark" closeButton />
       </body>
     </html>

@@ -23,7 +23,7 @@ export default function AboutStudio() {
     <section id="about" className="relative border-t border-hairline bg-surface-3 px-6 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          index="05"
+          index="06"
           eyebrow="The studio"
           title={
             <>

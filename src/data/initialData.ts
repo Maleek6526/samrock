@@ -29,7 +29,7 @@ export const initialBeats: Beat[] = [
     genre: "Afrobeats",
     bpm: 105,
     key: "F#m",
-    price: 30000,
+    price: 200000,
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     coverArt: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=60"
   },
@@ -40,7 +40,7 @@ export const initialBeats: Beat[] = [
     genre: "Reggae",
     bpm: 85,
     key: "Am",
-    price: 25000,
+    price: 200000,
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
     coverArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=60"
   },
@@ -51,7 +51,7 @@ export const initialBeats: Beat[] = [
     genre: "Woro",
     bpm: 120,
     key: "Cm",
-    price: 35000,
+    price: 200000,
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
     coverArt: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=60"
   }
@@ -218,6 +218,21 @@ export interface BookingRequest {
 }
 
 /**
+ * An artiste demo submitted to the label's A&R desk through the /demo page.
+ */
+export interface DemoRequest {
+  id: string;
+  stageName: string;
+  email: string;
+  phone: string;
+  genre: string;
+  location: string;
+  links: string;
+  message: string;
+  createdAt: string;
+}
+
+/**
  * A video surfaced on the home page "visuals" section. `url` holds a YouTube
  * link, a direct video link, or a data URL for a clip picked from the device.
  */
@@ -245,8 +260,7 @@ export const initialArtists: Artist[] = [
     genre: 'Afrobeats',
     bio: 'Recording artiste with a melodic Afrobeats delivery, produced and mixed at Samrock Music Productions.',
     location: 'Lagos, Nigeria',
-    photo:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=60',
+    photo: '/artists/adekunle-adelana.jpg',
     highlights: ['Single "Irugbin"', 'Produced at Samrock', 'Afrobeats'],
     legacy: false,
   },
@@ -292,6 +306,90 @@ export const initialArtists: Artist[] = [
     photo:
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&auto=format&fit=crop&q=60',
     highlights: ['Production credits with Samrock', 'Afrobeats'],
+    legacy: false,
+  },
+
+  /* Recorded artistes seeded with their studio portraits. Genre, bio and the
+     rest are intentionally left blank so the roster can be completed from the
+     admin dashboard without inventing credits. */
+  {
+    id: 'ar-7',
+    name: 'B2 Strings',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/b2-strings.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-8',
+    name: 'Gideon Gboyega',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/gideon-gboyega.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-9',
+    name: 'Great Amen',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/great-amen.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-10',
+    name: 'Odunola Apesin',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/odunola-apesin.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-11',
+    name: 'Pst. Adelana Elijah Olusegun',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/pst-adelana-elijah-olusegun.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-12',
+    name: 'Saxy J',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/saxy-j.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-13',
+    name: 'Sayana the Preserved',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/sayana-the-preserved.jpg',
+    highlights: [],
+    legacy: false,
+  },
+  {
+    id: 'ar-14',
+    name: 'Sekemi Oluyemi',
+    genre: '',
+    bio: '',
+    location: '',
+    photo: '/artists/sekemi-oluyemi.jpg',
+    highlights: [],
     legacy: false,
   },
 ];
@@ -504,3 +602,5 @@ export const initialVideos: VideoItem[] = [];
 export const initialSubscribers: Subscriber[] = [];
 
 export const initialBookings: BookingRequest[] = [];
+
+export const initialDemos: DemoRequest[] = [];

@@ -121,6 +121,7 @@ export const footerLinks = [
   { label: 'Events', href: '/events' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Announcements', href: '/announcements' },
+  { label: 'Submit a Demo', href: '/demo' },
   { label: 'About', href: '/about' },
   { label: 'Founder', href: '/founder' },
   { label: 'Booking', href: '/booking' },
@@ -159,12 +160,29 @@ export const bookingDurations = [
   '90 minutes',
 ] as const;
 
+/** Genre options offered by the A&R demo submission form. */
+export const demoGenres = [
+  'Afrobeats',
+  'Reggae',
+  'Woro',
+  'Trap',
+  'Highlife',
+  'Gospel / Worship',
+  'R&B / Soul',
+  'Other',
+] as const;
+
 /** Editable long-form site content, surfaced through the admin Content tab. */
 export interface ContentSettings {
   about: {
     intro: string;
     visionTitle: string;
     visionBody: string;
+    /** The label story told on /about, kept apart from the studio copy. */
+    labelStory: {
+      title: string;
+      body: string[];
+    };
     pillars: { title: string; description: string }[];
     milestones: { year: string; text: string }[];
     stats: { value: string; label: string }[];
@@ -208,6 +226,14 @@ export const defaultContentSettings: ContentSettings = {
     visionTitle: 'Doing the music business, one record at a time',
     visionBody:
       'Our goal is to give talented artistes a serious platform, pairing engineering excellence with instinct so that every release is built to compete on the global stage.',
+    labelStory: {
+      title: 'More than a studio, a label',
+      body: [
+        'Samrock Music Productions grew from a single production room into a label that signs artistes, builds records and carries them from the first idea through to the release date.',
+        'We develop the artiste as much as the song. Writing and production, engineering, visual direction and release support all sit under one roof, so nothing is lost between the idea and the audience.',
+        'Every project is treated as a catalogue piece. We keep the standard high, move at the artiste\u2019s pace, and put each record in front of the people it was made for.',
+      ],
+    },
     pillars: [
       {
         title: 'Beat Making & Production',
@@ -235,7 +261,7 @@ export const defaultContentSettings: ContentSettings = {
     stats: [
       { value: '10+', label: 'Years producing' },
       { value: '50+', label: 'Records delivered' },
-      { value: '6', label: 'Artistes on the roster' },
+      { value: '14', label: 'Artistes on the roster' },
     ],
   },
   founder: {
@@ -275,7 +301,11 @@ export const defaultContentSettings: ContentSettings = {
   },
   imagery: {
     heroImages: ['/hero1.jpg', '/hero2.jpg', '/hero3.jpg', '/hero4.jpg', '/hero5.jpg'],
-    studioGallery: [],
+    studioGallery: [
+      '/studio/samrock-studio-1.jpg',
+      '/studio/samrock-studio-2.jpg',
+      '/studio/samrock-studio-3.jpg',
+    ],
   },
   streamingPlatforms: [
     { label: 'Spotify', href: 'https://open.spotify.com/artist/1oexpD5GaB60odDIN76czV' },

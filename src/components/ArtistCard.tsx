@@ -4,11 +4,12 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { slugify } from '@/lib/site';
 import type { Artist } from '@/data/initialData';
 
-/** Roster card. Links to the artist profile panel on /artists via query param. */
+/** Roster card. Links to the artiste's detail page unless `href` overrides it. */
 export default function ArtistCard({ artist, href }: { artist: Artist; href?: string }) {
-  const link = href ?? `/artists?artist=${encodeURIComponent(artist.name)}`;
+  const link = href ?? `/artists/${slugify(artist.name)}`;
 
   return (
     <article className="group border-t border-hairline pt-5">
@@ -28,9 +29,13 @@ export default function ArtistCard({ artist, href }: { artist: Artist; href?: st
         )}
       </div>
 
-      <p className="eyebrow mt-6 text-brand">{artist.genre}</p>
-      <h3 className="mt-3 font-display text-title text-strong">{artist.name}</h3>
-      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-silver">{artist.bio}</p>
+      <div className="mt-6">
+        {artist.genre ? <p className="eyebrow text-brand">{artist.genre}</p> : null}
+        <h3 className="mt-3 font-display text-title text-strong">{artist.name}</h3>
+        {artist.bio ? (
+          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-silver">{artist.bio}</p>
+        ) : null}
+      </div>
 
       <Link
         href={link}

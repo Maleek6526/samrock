@@ -49,6 +49,33 @@ export default function AboutView() {
         <section className="mt-20 border-t border-hairline pt-12">
           <div className="flex items-baseline gap-4">
             <span className="eyebrow text-brand">02</span>
+            <span className="eyebrow text-silver">The label</span>
+          </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-12 md:gap-10">
+            <h2 className="font-display text-title text-strong md:col-span-7">
+              {about.labelStory.title}
+            </h2>
+            <div className="space-y-5 md:col-span-5 md:pt-1">
+              {about.labelStory.body.map((paragraph) => (
+                <p key={paragraph} className="text-sm leading-relaxed text-silver">
+                  {paragraph}
+                </p>
+              ))}
+              <Link
+                href="/demo"
+                className="link-underline eyebrow inline-flex items-center gap-2 text-brand"
+              >
+                Submit a demo
+                <ArrowRight size={12} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-20 border-t border-hairline pt-12">
+          <div className="flex items-baseline gap-4">
+            <span className="eyebrow text-brand">03</span>
             <span className="eyebrow text-silver">What we do</span>
           </div>
 
@@ -64,7 +91,7 @@ export default function AboutView() {
 
         <section className="mt-20 border-t border-hairline pt-12">
           <div className="flex items-baseline gap-4">
-            <span className="eyebrow text-brand">03</span>
+            <span className="eyebrow text-brand">04</span>
             <span className="eyebrow text-silver">Milestones</span>
           </div>
 
@@ -80,7 +107,7 @@ export default function AboutView() {
 
         <section className="mt-20 border-t border-hairline pt-12">
           <div className="flex items-baseline gap-4">
-            <span className="eyebrow text-brand">04</span>
+            <span className="eyebrow text-brand">05</span>
             <span className="eyebrow text-silver">Founder</span>
           </div>
 

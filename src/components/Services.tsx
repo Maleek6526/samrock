@@ -10,7 +10,7 @@ export default function Services() {
     <section id="services" className="relative border-t border-hairline bg-surface px-6 py-24 sm:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          index="04"
+          index="05"
           eyebrow="Professional expertise"
           title={
             <>
